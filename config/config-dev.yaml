@@ -1,0 +1,10 @@
+# Development Server - API Admin New
+# Uses environment variables for secrets
+
+database:
+  postgres:
+    host: "dev-postgres.edugo.internal"
+
+logging:
+  level: "debug"
+  format: "json"
