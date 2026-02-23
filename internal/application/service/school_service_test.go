@@ -8,8 +8,8 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
-	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-api-admin-new/test/mock"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -250,7 +250,7 @@ func TestSchoolService_ListSchools(t *testing.T) {
 		{
 			name: "success - returns list",
 			setupMock: func(m *mock.MockSchoolRepository) {
-				m.ListFn = func(_ context.Context, _ repository.ListFilters) ([]*entities.School, error) {
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, error) {
 					return []*entities.School{
 						{ID: uuid.New(), Name: "School 1", Code: "S1"},
 						{ID: uuid.New(), Name: "School 2", Code: "S2"},
@@ -263,7 +263,7 @@ func TestSchoolService_ListSchools(t *testing.T) {
 		{
 			name: "success - empty list",
 			setupMock: func(m *mock.MockSchoolRepository) {
-				m.ListFn = func(_ context.Context, _ repository.ListFilters) ([]*entities.School, error) {
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, error) {
 					return []*entities.School{}, nil
 				}
 			},
@@ -273,7 +273,7 @@ func TestSchoolService_ListSchools(t *testing.T) {
 		{
 			name: "error - database error",
 			setupMock: func(m *mock.MockSchoolRepository) {
-				m.ListFn = func(_ context.Context, _ repository.ListFilters) ([]*entities.School, error) {
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, error) {
 					return nil, fmt.Errorf("timeout")
 				}
 			},

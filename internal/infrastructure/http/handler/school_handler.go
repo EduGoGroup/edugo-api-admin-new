@@ -26,7 +26,13 @@ func NewSchoolHandler(schoolService service.SchoolService, logger logger.Logger)
 // @Tags schools
 // @Accept json
 // @Produce json
-// @Router /v1/schools [post]
+// @Param request body dto.CreateSchoolRequest true "School data"
+// @Success 201 {object} dto.SchoolResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools [post]
 func (h *SchoolHandler) CreateSchool(c *gin.Context) {
 	var req dto.CreateSchoolRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -44,7 +50,16 @@ func (h *SchoolHandler) CreateSchool(c *gin.Context) {
 // GetSchool godoc
 // @Summary Get a school by ID
 // @Tags schools
-// @Router /v1/schools/{id} [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "School ID (UUID)"
+// @Success 200 {object} dto.SchoolResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools/{id} [get]
 func (h *SchoolHandler) GetSchool(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -62,7 +77,16 @@ func (h *SchoolHandler) GetSchool(c *gin.Context) {
 // GetSchoolByCode godoc
 // @Summary Get a school by code
 // @Tags schools
-// @Router /v1/schools/code/{code} [get]
+// @Accept json
+// @Produce json
+// @Param code path string true "School code"
+// @Success 200 {object} dto.SchoolResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools/code/{code} [get]
 func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 	code := c.Param("code")
 	if code == "" {
@@ -80,7 +104,13 @@ func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 // ListSchools godoc
 // @Summary List all schools
 // @Tags schools
-// @Router /v1/schools [get]
+// @Accept json
+// @Produce json
+// @Success 200 {array} dto.SchoolResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools [get]
 func (h *SchoolHandler) ListSchools(c *gin.Context) {
 	schools, err := h.schoolService.ListSchools(c.Request.Context())
 	if err != nil {
@@ -93,7 +123,17 @@ func (h *SchoolHandler) ListSchools(c *gin.Context) {
 // UpdateSchool godoc
 // @Summary Update a school
 // @Tags schools
-// @Router /v1/schools/{id} [put]
+// @Accept json
+// @Produce json
+// @Param id path string true "School ID (UUID)"
+// @Param request body dto.UpdateSchoolRequest true "School update data"
+// @Success 200 {object} dto.SchoolResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools/{id} [put]
 func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -116,7 +156,16 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 // DeleteSchool godoc
 // @Summary Delete a school
 // @Tags schools
-// @Router /v1/schools/{id} [delete]
+// @Accept json
+// @Produce json
+// @Param id path string true "School ID (UUID)"
+// @Success 204 "No content"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools/{id} [delete]
 func (h *SchoolHandler) DeleteSchool(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {

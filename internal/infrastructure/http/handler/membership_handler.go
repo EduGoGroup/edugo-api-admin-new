@@ -22,7 +22,15 @@ func NewMembershipHandler(membershipService service.MembershipService, logger lo
 // CreateMembership godoc
 // @Summary Create a membership
 // @Tags memberships
-// @Router /v1/memberships [post]
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateMembershipRequest true "Membership data"
+// @Success 201 {object} dto.MembershipResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /memberships [post]
 func (h *MembershipHandler) CreateMembership(c *gin.Context) {
 	var req dto.CreateMembershipRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -40,7 +48,15 @@ func (h *MembershipHandler) CreateMembership(c *gin.Context) {
 // ListMembershipsByUnit godoc
 // @Summary List memberships by unit
 // @Tags memberships
-// @Router /v1/memberships [get]
+// @Accept json
+// @Produce json
+// @Param unit_id query string true "Unit ID"
+// @Success 200 {array} dto.MembershipResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /memberships [get]
 func (h *MembershipHandler) ListMembershipsByUnit(c *gin.Context) {
 	unitID := c.Query("unit_id")
 	if unitID == "" {
@@ -58,7 +74,16 @@ func (h *MembershipHandler) ListMembershipsByUnit(c *gin.Context) {
 // ListMembershipsByRole godoc
 // @Summary List memberships by role
 // @Tags memberships
-// @Router /v1/memberships/by-role [get]
+// @Accept json
+// @Produce json
+// @Param unit_id query string true "Unit ID"
+// @Param role query string true "Role name"
+// @Success 200 {array} dto.MembershipResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /memberships/by-role [get]
 func (h *MembershipHandler) ListMembershipsByRole(c *gin.Context) {
 	unitID := c.Query("unit_id")
 	role := c.Query("role")
@@ -77,7 +102,15 @@ func (h *MembershipHandler) ListMembershipsByRole(c *gin.Context) {
 // GetMembership godoc
 // @Summary Get a membership by ID
 // @Tags memberships
-// @Router /v1/memberships/{id} [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "Membership ID (UUID)"
+// @Success 200 {object} dto.MembershipResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /memberships/{id} [get]
 func (h *MembershipHandler) GetMembership(c *gin.Context) {
 	id := c.Param("id")
 	m, err := h.membershipService.GetMembership(c.Request.Context(), id)
@@ -91,7 +124,17 @@ func (h *MembershipHandler) GetMembership(c *gin.Context) {
 // UpdateMembership godoc
 // @Summary Update a membership
 // @Tags memberships
-// @Router /v1/memberships/{id} [put]
+// @Accept json
+// @Produce json
+// @Param id path string true "Membership ID (UUID)"
+// @Param request body dto.UpdateMembershipRequest true "Membership update data"
+// @Success 200 {object} dto.MembershipResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /memberships/{id} [put]
 func (h *MembershipHandler) UpdateMembership(c *gin.Context) {
 	id := c.Param("id")
 	var req dto.UpdateMembershipRequest
@@ -110,7 +153,15 @@ func (h *MembershipHandler) UpdateMembership(c *gin.Context) {
 // DeleteMembership godoc
 // @Summary Delete a membership
 // @Tags memberships
-// @Router /v1/memberships/{id} [delete]
+// @Accept json
+// @Produce json
+// @Param id path string true "Membership ID (UUID)"
+// @Success 204 "No content"
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /memberships/{id} [delete]
 func (h *MembershipHandler) DeleteMembership(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.membershipService.DeleteMembership(c.Request.Context(), id); err != nil {
@@ -123,7 +174,15 @@ func (h *MembershipHandler) DeleteMembership(c *gin.Context) {
 // ExpireMembership godoc
 // @Summary Expire a membership
 // @Tags memberships
-// @Router /v1/memberships/{id}/expire [post]
+// @Accept json
+// @Produce json
+// @Param id path string true "Membership ID (UUID)"
+// @Success 200 {object} dto.MembershipResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /memberships/{id}/expire [post]
 func (h *MembershipHandler) ExpireMembership(c *gin.Context) {
 	id := c.Param("id")
 	m, err := h.membershipService.ExpireMembership(c.Request.Context(), id)
@@ -137,7 +196,14 @@ func (h *MembershipHandler) ExpireMembership(c *gin.Context) {
 // ListMembershipsByUser godoc
 // @Summary List memberships for a user
 // @Tags users
-// @Router /v1/users/{user_id}/memberships [get]
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID (UUID)"
+// @Success 200 {array} dto.MembershipResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{user_id}/memberships [get]
 func (h *MembershipHandler) ListMembershipsByUser(c *gin.Context) {
 	userID := c.Param("user_id")
 	memberships, err := h.membershipService.ListMembershipsByUser(c.Request.Context(), userID)

@@ -1,95 +1,94 @@
 package container
 
 import (
-	"database/sql"
-
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
-	authHandler "github.com/EduGoGroup/edugo-api-admin-new/internal/auth/handler"
-	authService "github.com/EduGoGroup/edugo-api-admin-new/internal/auth/service"
+	"github.com/EduGoGroup/edugo-api-admin-new/internal/client"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/handler"
 	pgRepo "github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/persistence/postgres/repository"
-	"github.com/EduGoGroup/edugo-shared/auth"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepopg "github.com/EduGoGroup/edugo-shared/repository/postgres"
+	"gorm.io/gorm"
 )
 
 // Container is the dependency injection container
 type Container struct {
-	DB         *sql.DB
-	Logger     logger.Logger
-	JWTManager *auth.JWTManager
+	DB     *gorm.DB
+	Logger logger.Logger
 
-	// Auth
-	TokenService  *authService.TokenService
-	AuthService   authService.AuthService
-	AuthHandler   *authHandler.AuthHandler
-	VerifyHandler *authHandler.VerifyHandler
+	// Clients
+	AuthClient *client.AuthClient
+	IAMClient  *client.IAMClient
 
 	// Handlers
 	SchoolHandler       *handler.SchoolHandler
 	AcademicUnitHandler *handler.AcademicUnitHandler
 	MembershipHandler   *handler.MembershipHandler
-	RoleHandler         *handler.RoleHandler
-	ResourceHandler     *handler.ResourceHandler
-	MenuHandler         *handler.MenuHandler
-	PermissionHandler   *handler.PermissionHandler
 	SubjectHandler      *handler.SubjectHandler
 	GuardianHandler     *handler.GuardianHandler
-	ScreenConfigHandler *handler.ScreenConfigHandler
+	UserHandler         *handler.UserHandler
+	StatsHandler        *handler.StatsHandler
+	MaterialHandler     *handler.MaterialHandler
+	HealthHandler       *handler.HealthHandler
 }
 
 // NewContainer creates a new container and initializes all dependencies
-func NewContainer(db *sql.DB, log logger.Logger, cfg *config.Config) *Container {
+func NewContainer(db *gorm.DB, log logger.Logger, cfg *config.Config) *Container {
 	c := &Container{
-		DB:         db,
-		Logger:     log,
-		JWTManager: auth.NewJWTManager(cfg.Auth.JWT.Secret, cfg.Auth.JWT.Issuer),
+		DB:     db,
+		Logger: log,
 	}
 
-	// Repositories
-	userRepo := pgRepo.NewPostgresUserRepository(db)
-	schoolRepo := pgRepo.NewPostgresSchoolRepository(db)
+	// Auth Client (local JWT + optional remote fallback via IAM Platform)
+	c.AuthClient = client.NewAuthClient(client.AuthClientConfig{
+		JWTSecret:       cfg.Auth.JWT.Secret,
+		JWTIssuer:       cfg.Auth.JWT.Issuer,
+		BaseURL:         cfg.Auth.APIIamPlatform.BaseURL,
+		Timeout:         cfg.Auth.APIIamPlatform.Timeout,
+		RemoteEnabled:   cfg.Auth.APIIamPlatform.RemoteEnabled,
+		FallbackEnabled: cfg.Auth.APIIamPlatform.FallbackEnabled,
+		CacheTTL:        cfg.Auth.APIIamPlatform.CacheTTL,
+		CacheEnabled:    cfg.Auth.APIIamPlatform.CacheEnabled,
+	})
+
+	// IAM Client (for role operations proxy)
+	c.IAMClient = client.NewIAMClient(client.IAMClientConfig{
+		BaseURL: cfg.Auth.APIIamPlatform.BaseURL,
+		Timeout: cfg.Auth.APIIamPlatform.Timeout,
+	})
+
+	// Shared repositories (from edugo-shared/repository)
+	schoolRepo := sharedrepopg.NewPostgresSchoolRepository(db)
+	userRepo := sharedrepopg.NewPostgresUserRepository(db)
+	membershipRepo := sharedrepopg.NewPostgresMembershipRepository(db)
+
+	// Local repositories
 	unitRepo := pgRepo.NewPostgresAcademicUnitRepository(db)
-	membershipRepo := pgRepo.NewPostgresMembershipRepository(db)
-	roleRepo := pgRepo.NewPostgresRoleRepository(db)
-	permissionRepo := pgRepo.NewPostgresPermissionRepository(db)
-	userRoleRepo := pgRepo.NewPostgresUserRoleRepository(db)
-	resourceRepo := pgRepo.NewPostgresResourceRepository(db)
 	subjectRepo := pgRepo.NewPostgresSubjectRepository(db)
 	guardianRepo := pgRepo.NewPostgresGuardianRepository(db)
-	screenTemplateRepo := pgRepo.NewPostgresScreenTemplateRepository(db)
-	screenInstanceRepo := pgRepo.NewPostgresScreenInstanceRepository(db)
-	resourceScreenRepo := pgRepo.NewPostgresResourceScreenRepository(db)
-
-	// Auth
-	c.TokenService = authService.NewTokenService(c.JWTManager, cfg.Auth.JWT.AccessTokenDuration, cfg.Auth.JWT.RefreshTokenDuration)
-	c.AuthService = authService.NewAuthService(userRepo, userRoleRepo, roleRepo, c.TokenService, log)
-	c.AuthHandler = authHandler.NewAuthHandler(c.AuthService, log)
-	c.VerifyHandler = authHandler.NewVerifyHandler(c.TokenService)
+	statsRepo := pgRepo.NewPostgresStatsRepository(db)
+	materialRepo := pgRepo.NewPostgresMaterialRepository(db)
 
 	// Services
 	schoolService := service.NewSchoolService(schoolRepo, log, cfg.Defaults.School)
 	unitService := service.NewAcademicUnitService(unitRepo, schoolRepo, log)
 	membershipService := service.NewMembershipService(membershipRepo, log)
-	roleService := service.NewRoleService(roleRepo, permissionRepo, userRoleRepo, log)
-	resourceService := service.NewResourceService(resourceRepo, log)
-	menuService := service.NewMenuService(resourceRepo, resourceScreenRepo, log)
-	permissionService := service.NewPermissionService(permissionRepo, log)
 	subjectService := service.NewSubjectService(subjectRepo, log)
 	guardianService := service.NewGuardianService(guardianRepo, log)
-	screenConfigService := service.NewScreenConfigService(screenTemplateRepo, screenInstanceRepo, resourceScreenRepo, log)
+	userService := service.NewUserService(userRepo, log)
+	statsService := service.NewStatsService(statsRepo, log)
+	materialService := service.NewMaterialService(materialRepo, log)
 
 	// Handlers
 	c.SchoolHandler = handler.NewSchoolHandler(schoolService, log)
 	c.AcademicUnitHandler = handler.NewAcademicUnitHandler(unitService, log)
 	c.MembershipHandler = handler.NewMembershipHandler(membershipService, log)
-	c.RoleHandler = handler.NewRoleHandler(roleService, log)
-	c.ResourceHandler = handler.NewResourceHandler(resourceService, log)
-	c.MenuHandler = handler.NewMenuHandler(menuService, log)
-	c.PermissionHandler = handler.NewPermissionHandler(permissionService, log)
 	c.SubjectHandler = handler.NewSubjectHandler(subjectService, log)
 	c.GuardianHandler = handler.NewGuardianHandler(guardianService, log)
-	c.ScreenConfigHandler = handler.NewScreenConfigHandler(screenConfigService, log)
+	c.UserHandler = handler.NewUserHandler(userService, log)
+	c.StatsHandler = handler.NewStatsHandler(statsService, log)
+	c.MaterialHandler = handler.NewMaterialHandler(materialService, log)
+	c.HealthHandler = handler.NewHealthHandler(db, "dev")
 
 	return c
 }
@@ -97,7 +96,11 @@ func NewContainer(db *sql.DB, log logger.Logger, cfg *config.Config) *Container 
 // Close releases container resources
 func (c *Container) Close() error {
 	if c.DB != nil {
-		return c.DB.Close()
+		sqlDB, err := c.DB.DB()
+		if err != nil {
+			return err
+		}
+		return sqlDB.Close()
 	}
 	return nil
 }

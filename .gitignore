@@ -26,10 +26,6 @@ coverage/
 go.work
 go.work.sum
 
-# IDEs and editors
-.idea/
-.vscode/
-.zed/
 *.swp
 *.swo
 *~

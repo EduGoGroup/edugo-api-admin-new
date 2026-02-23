@@ -1,0 +1,1830 @@
+basePath: /api/v1
+definitions:
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      parent_unit_id:
+        type: string
+      school_id:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateAcademicUnitRequest:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      display_name:
+        minLength: 3
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      parent_unit_id:
+        type: string
+      type:
+        type: string
+    required:
+    - display_name
+    - type
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateGuardianRelationRequest:
+    properties:
+      guardian_id:
+        type: string
+      relationship_type:
+        type: string
+      student_id:
+        type: string
+    required:
+    - guardian_id
+    - relationship_type
+    - student_id
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateMembershipRequest:
+    properties:
+      role:
+        type: string
+      unit_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - role
+    - unit_id
+    - user_id
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateSchoolRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      code:
+        minLength: 3
+        type: string
+      contact_email:
+        type: string
+      contact_phone:
+        type: string
+      country:
+        type: string
+      max_students:
+        type: integer
+      max_teachers:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        minLength: 3
+        type: string
+      subscription_tier:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateSubjectRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        type: string
+      name:
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse:
+    properties:
+      code:
+        type: string
+      details:
+        additionalProperties:
+          type: string
+        type: object
+      error:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.GlobalStatsResponse:
+    properties:
+      total_active_users:
+        type: integer
+      total_guardian_relations:
+        type: integer
+      total_schools:
+        type: integer
+      total_subjects:
+        type: integer
+      total_users:
+        type: integer
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.GuardianRelationResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      guardian_id:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      relationship_type:
+        type: string
+      student_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse:
+    properties:
+      created_at:
+        type: string
+      enrolled_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      role:
+        type: string
+      unit_id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      withdrawn_at:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      code:
+        type: string
+      contact_email:
+        type: string
+      contact_phone:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      max_students:
+        type: integer
+      max_teachers:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      subscription_tier:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SubjectResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      metadata:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateAcademicUnitRequest:
+    properties:
+      description:
+        type: string
+      display_name:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      parent_unit_id:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateGuardianRelationRequest:
+    properties:
+      is_active:
+        type: boolean
+      relationship_type:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateMembershipRequest:
+    properties:
+      role:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSchoolRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      contact_email:
+        type: string
+      contact_phone:
+        type: string
+      country:
+        type: string
+      max_students:
+        type: integer
+      max_teachers:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      subscription_tier:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSubjectRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        type: string
+      name:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateUserRequest:
+    properties:
+      first_name:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8060
+info:
+  contact: {}
+  description: Administration API for EduGo - schools, academic units, memberships,
+    users, subjects, guardians, stats, materials
+  title: EduGo API Admin New
+  version: "1.0"
+paths:
+  /guardian-relations:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Guardian relation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateGuardianRelationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.GuardianRelationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a guardian relation
+      tags:
+      - guardian-relations
+  /guardian-relations/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Guardian Relation ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a guardian relation
+      tags:
+      - guardian-relations
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Guardian Relation ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.GuardianRelationResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a guardian relation by ID
+      tags:
+      - guardian-relations
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Guardian Relation ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Guardian relation update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateGuardianRelationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.GuardianRelationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a guardian relation
+      tags:
+      - guardian-relations
+  /guardians/{guardian_id}/relations:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Guardian ID (UUID)
+        in: path
+        name: guardian_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.GuardianRelationResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get relations for a guardian
+      tags:
+      - guardian-relations
+  /health:
+    get:
+      description: Returns the health status of the API and its dependencies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check
+      tags:
+      - health
+  /materials/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Material ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a material
+      tags:
+      - materials
+  /memberships:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unit ID
+        in: query
+        name: unit_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List memberships by unit
+      tags:
+      - memberships
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Membership data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateMembershipRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a membership
+      tags:
+      - memberships
+  /memberships/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Membership ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a membership
+      tags:
+      - memberships
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Membership ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a membership by ID
+      tags:
+      - memberships
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Membership ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Membership update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateMembershipRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a membership
+      tags:
+      - memberships
+  /memberships/{id}/expire:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Membership ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Expire a membership
+      tags:
+      - memberships
+  /memberships/by-role:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Unit ID
+        in: query
+        name: unit_id
+        required: true
+        type: string
+      - description: Role name
+        in: query
+        name: role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List memberships by role
+      tags:
+      - memberships
+  /schools:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all schools
+      tags:
+      - schools
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: School data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateSchoolRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new school
+      tags:
+      - schools
+  /schools/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a school
+      tags:
+      - schools
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a school by ID
+      tags:
+      - schools
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: School update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSchoolRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a school
+      tags:
+      - schools
+  /schools/{id}/units:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List academic units by school
+      tags:
+      - academic-units
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Academic unit data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateAcademicUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create an academic unit under a school
+      tags:
+      - academic-units
+  /schools/{id}/units/by-type:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Unit type filter
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List academic units by type for a school
+      tags:
+      - academic-units
+  /schools/{id}/units/tree:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get hierarchical unit tree for a school
+      tags:
+      - academic-units
+  /schools/code/{code}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: School code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a school by code
+      tags:
+      - schools
+  /stats/global:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.GlobalStatsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get global statistics
+      tags:
+      - stats
+  /students/{student_id}/guardians:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Student ID (UUID)
+        in: path
+        name: student_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.GuardianRelationResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get guardians for a student
+      tags:
+      - guardian-relations
+  /subjects:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SubjectResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all subjects
+      tags:
+      - subjects
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Subject data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateSubjectRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SubjectResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a subject
+      tags:
+      - subjects
+  /subjects/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Subject ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a subject
+      tags:
+      - subjects
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Subject ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SubjectResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a subject by ID
+      tags:
+      - subjects
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Subject ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Subject update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSubjectRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SubjectResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a subject
+      tags:
+      - subjects
+  /units/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Academic Unit ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Soft delete an academic unit
+      tags:
+      - academic-units
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Academic Unit ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get an academic unit by ID
+      tags:
+      - academic-units
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Academic Unit ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Academic unit update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateAcademicUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update an academic unit
+      tags:
+      - academic-units
+  /units/{id}/hierarchy-path:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Academic Unit ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get hierarchy path from root to unit
+      tags:
+      - academic-units
+  /units/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Academic Unit ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Restore a soft-deleted academic unit
+      tags:
+      - academic-units
+  /users:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      - description: Limit results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset results
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UserResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new user
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a user by ID
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a user
+      tags:
+      - users
+  /users/{user_id}/memberships:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List memberships for a user
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: 'Type "Bearer" followed by a space and the JWT token. Example: "Bearer
+      eyJhbGci..."'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
