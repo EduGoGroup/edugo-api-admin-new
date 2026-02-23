@@ -10,6 +10,7 @@ import (
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 )
 
@@ -28,12 +29,12 @@ type AcademicUnitService interface {
 
 type academicUnitService struct {
 	unitRepo   repository.AcademicUnitRepository
-	schoolRepo repository.SchoolRepository
+	schoolRepo sharedrepo.SchoolRepository
 	logger     logger.Logger
 }
 
 // NewAcademicUnitService creates a new academic unit service
-func NewAcademicUnitService(unitRepo repository.AcademicUnitRepository, schoolRepo repository.SchoolRepository, logger logger.Logger) AcademicUnitService {
+func NewAcademicUnitService(unitRepo repository.AcademicUnitRepository, schoolRepo sharedrepo.SchoolRepository, logger logger.Logger) AcademicUnitService {
 	return &academicUnitService{unitRepo: unitRepo, schoolRepo: schoolRepo, logger: logger}
 }
 

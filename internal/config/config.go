@@ -2,146 +2,96 @@ package config
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/spf13/viper"
+	"github.com/caarlos0/env/v11"
 )
 
-// Config represents the full application configuration
 type Config struct {
-	Environment string         `mapstructure:"environment"`
-	Server      ServerConfig   `mapstructure:"server"`
-	Database    DatabaseConfig `mapstructure:"database"`
-	Logging     LoggingConfig  `mapstructure:"logging"`
-	Auth        AuthConfig     `mapstructure:"auth"`
-	Defaults    DefaultsConfig `mapstructure:"defaults"`
-	CORS        CORSConfig     `mapstructure:"cors"`
+	Environment string         `env:"APP_ENV"     envDefault:"development"`
+	Server      ServerConfig   `envPrefix:"SERVER_"`
+	Database    DatabaseConfig `envPrefix:"DATABASE_"`
+	Auth        AuthConfig     `envPrefix:"AUTH_"`
+	Logging     LoggingConfig  `envPrefix:"LOGGING_"`
+	Defaults    DefaultsConfig `envPrefix:"DEFAULTS_"`
+	CORS        CORSConfig     `envPrefix:"CORS_"`
 }
 
-// ServerConfig configures the HTTP server
 type ServerConfig struct {
-	Port         int           `mapstructure:"port"`
-	Host         string        `mapstructure:"host"`
-	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+	Port         int           `env:"PORT"          envDefault:"8081"`
+	Host         string        `env:"HOST"          envDefault:"0.0.0.0"`
+	ReadTimeout  time.Duration `env:"READ_TIMEOUT"  envDefault:"15s"`
+	WriteTimeout time.Duration `env:"WRITE_TIMEOUT" envDefault:"15s"`
+	SwaggerHost  string        `env:"SWAGGER_HOST"`
 }
 
-// DatabaseConfig configures the database connections
 type DatabaseConfig struct {
-	Postgres PostgresConfig `mapstructure:"postgres"`
+	Postgres PostgresConfig `envPrefix:"POSTGRES_"`
 }
 
-// PostgresConfig configures PostgreSQL connection
 type PostgresConfig struct {
-	Host           string `mapstructure:"host"`
-	Port           int    `mapstructure:"port"`
-	Database       string `mapstructure:"database"`
-	User           string `mapstructure:"user"`
-	Password       string `mapstructure:"password"`
-	MaxConnections int    `mapstructure:"max_connections"`
-	SSLMode        string `mapstructure:"ssl_mode"`
+	Host         string `env:"HOST"           envDefault:"localhost"`
+	Port         int    `env:"PORT"           envDefault:"5432"`
+	Database     string `env:"DATABASE"       envDefault:"edugo"`
+	User         string `env:"USER"           envDefault:"edugo"`
+	Password     string `env:"PASSWORD,required"`
+	MaxOpenConns int    `env:"MAX_OPEN_CONNS" envDefault:"25"`
+	MaxIdleConns int    `env:"MAX_IDLE_CONNS" envDefault:"10"`
+	SSLMode      string `env:"SSL_MODE"       envDefault:"disable"`
 }
 
-// LoggingConfig configures logging
 type LoggingConfig struct {
-	Level  string `mapstructure:"level"`
-	Format string `mapstructure:"format"`
+	Level  string `env:"LEVEL"  envDefault:"info"`
+	Format string `env:"FORMAT" envDefault:"json"`
 }
 
-// AuthConfig configures authentication
 type AuthConfig struct {
-	JWT              JWTConfig              `mapstructure:"jwt"`
-	InternalServices InternalServicesConfig `mapstructure:"internal_services"`
+	JWT            JWTConfig            `envPrefix:"JWT_"`
+	APIIamPlatform APIIamPlatformConfig `envPrefix:"API_IAM_PLATFORM_"`
 }
 
-// JWTConfig configures JWT tokens
 type JWTConfig struct {
-	Secret               string        `mapstructure:"secret"`
-	Issuer               string        `mapstructure:"issuer"`
-	AccessTokenDuration  time.Duration `mapstructure:"access_token_duration"`
-	RefreshTokenDuration time.Duration `mapstructure:"refresh_token_duration"`
+	Secret string `env:"SECRET,required"`
+	Issuer string `env:"ISSUER" envDefault:"edugo-central"`
 }
 
-// InternalServicesConfig configures internal service authentication
-type InternalServicesConfig struct {
-	APIKeys  string `mapstructure:"api_keys"`
-	IPRanges string `mapstructure:"ip_ranges"`
+type APIIamPlatformConfig struct {
+	BaseURL         string        `env:"BASE_URL"         envDefault:"http://localhost:8070/api"`
+	Timeout         time.Duration `env:"TIMEOUT"          envDefault:"5s"`
+	CacheTTL        time.Duration `env:"CACHE_TTL"        envDefault:"60s"`
+	CacheEnabled    bool          `env:"CACHE_ENABLED"    envDefault:"true"`
+	RemoteEnabled   bool          `env:"REMOTE_ENABLED"   envDefault:"false"`
+	FallbackEnabled bool          `env:"FALLBACK_ENABLED" envDefault:"false"`
 }
 
-// DefaultsConfig contains default values
 type DefaultsConfig struct {
-	School SchoolDefaults `mapstructure:"school"`
+	School SchoolDefaults `envPrefix:"SCHOOL_"`
 }
 
-// SchoolDefaults contains default values for schools
 type SchoolDefaults struct {
-	Country          string `mapstructure:"country"`
-	SubscriptionTier string `mapstructure:"subscription_tier"`
-	MaxTeachers      int    `mapstructure:"max_teachers"`
-	MaxStudents      int    `mapstructure:"max_students"`
+	Country          string `env:"COUNTRY"           envDefault:"CO"`
+	SubscriptionTier string `env:"SUBSCRIPTION_TIER" envDefault:"free"`
+	MaxTeachers      int    `env:"MAX_TEACHERS"      envDefault:"50"`
+	MaxStudents      int    `env:"MAX_STUDENTS"      envDefault:"500"`
 }
 
-// CORSConfig configures CORS
 type CORSConfig struct {
-	AllowedOrigins string `mapstructure:"allowed_origins"`
-	AllowedMethods string `mapstructure:"allowed_methods"`
-	AllowedHeaders string `mapstructure:"allowed_headers"`
+	AllowedOrigins string `env:"ALLOWED_ORIGINS" envDefault:"*"`
+	AllowedMethods string `env:"ALLOWED_METHODS" envDefault:"GET,POST,PUT,PATCH,DELETE,OPTIONS"`
+	AllowedHeaders string `env:"ALLOWED_HEADERS" envDefault:"Origin,Content-Type,Accept,Authorization,X-Request-ID"`
 }
 
-// GetConnectionString returns the PostgreSQL connection string
-func (c *PostgresConfig) GetConnectionString() string {
+// DSN returns the PostgreSQL connection string
+func (c *PostgresConfig) DSN() string {
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Host, c.Port, c.User, c.Password, c.Database, c.SSLMode)
 }
 
-// Load reads configuration from file and environment variables
+// Load parses configuration from environment variables
 func Load() (*Config, error) {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./config")
-	viper.AddConfigPath(".")
-
-	// Environment variable overrides
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv()
-
-	// Defaults
-	viper.SetDefault("environment", "local")
-	viper.SetDefault("server.port", 8081)
-	viper.SetDefault("server.host", "0.0.0.0")
-	viper.SetDefault("server.read_timeout", "15s")
-	viper.SetDefault("server.write_timeout", "15s")
-	viper.SetDefault("database.postgres.host", "localhost")
-	viper.SetDefault("database.postgres.port", 5432)
-	viper.SetDefault("database.postgres.database", "edugo")
-	viper.SetDefault("database.postgres.user", "edugo")
-	viper.SetDefault("database.postgres.ssl_mode", "disable")
-	viper.SetDefault("database.postgres.max_connections", 25)
-	viper.SetDefault("logging.level", "info")
-	viper.SetDefault("logging.format", "json")
-	viper.SetDefault("auth.jwt.issuer", "edugo-central")
-	viper.SetDefault("auth.jwt.access_token_duration", "15m")
-	viper.SetDefault("auth.jwt.refresh_token_duration", "168h")
-	viper.SetDefault("defaults.school.country", "CO")
-	viper.SetDefault("defaults.school.subscription_tier", "free")
-	viper.SetDefault("defaults.school.max_teachers", 50)
-	viper.SetDefault("defaults.school.max_students", 500)
-	viper.SetDefault("cors.allowed_origins", "*")
-	viper.SetDefault("cors.allowed_methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
-	viper.SetDefault("cors.allowed_headers", "Origin,Content-Type,Accept,Authorization,X-Request-ID")
-
-	// Read config file (optional)
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return nil, fmt.Errorf("error reading config file: %w", err)
-		}
+	cfg, err := env.ParseAs[Config]()
+	if err != nil {
+		return nil, fmt.Errorf("error parsing config from environment: %w", err)
 	}
-
-	var cfg Config
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, fmt.Errorf("error unmarshalling config: %w", err)
-	}
-
 	return &cfg, nil
 }

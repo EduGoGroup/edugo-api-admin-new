@@ -7,10 +7,10 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
-	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 )
 
@@ -25,13 +25,13 @@ type SchoolService interface {
 }
 
 type schoolService struct {
-	schoolRepo repository.SchoolRepository
+	schoolRepo sharedrepo.SchoolRepository
 	logger     logger.Logger
 	defaults   config.SchoolDefaults
 }
 
 // NewSchoolService creates a new school service
-func NewSchoolService(schoolRepo repository.SchoolRepository, logger logger.Logger, defaults config.SchoolDefaults) SchoolService {
+func NewSchoolService(schoolRepo sharedrepo.SchoolRepository, logger logger.Logger, defaults config.SchoolDefaults) SchoolService {
 	return &schoolService{schoolRepo: schoolRepo, logger: logger, defaults: defaults}
 }
 
@@ -197,7 +197,7 @@ func (s *schoolService) UpdateSchool(ctx context.Context, id string, req dto.Upd
 }
 
 func (s *schoolService) ListSchools(ctx context.Context) ([]dto.SchoolResponse, error) {
-	schools, err := s.schoolRepo.List(ctx, repository.ListFilters{})
+	schools, err := s.schoolRepo.List(ctx, sharedrepo.ListFilters{})
 	if err != nil {
 		return nil, errors.NewDatabaseError("list schools", err)
 	}
