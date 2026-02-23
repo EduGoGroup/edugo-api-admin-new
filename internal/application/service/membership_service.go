@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
-	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 )
 
@@ -25,12 +25,12 @@ type MembershipService interface {
 }
 
 type membershipService struct {
-	membershipRepo repository.MembershipRepository
+	membershipRepo sharedrepo.MembershipRepository
 	logger         logger.Logger
 }
 
 // NewMembershipService creates a new membership service
-func NewMembershipService(membershipRepo repository.MembershipRepository, logger logger.Logger) MembershipService {
+func NewMembershipService(membershipRepo sharedrepo.MembershipRepository, logger logger.Logger) MembershipService {
 	return &membershipService{membershipRepo: membershipRepo, logger: logger}
 }
 

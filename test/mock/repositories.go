@@ -3,8 +3,8 @@ package mock
 import (
 	"context"
 
-	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 )
 
@@ -18,7 +18,7 @@ type MockSchoolRepository struct {
 	FindByCodeFn   func(ctx context.Context, code string) (*entities.School, error)
 	UpdateFn       func(ctx context.Context, school *entities.School) error
 	DeleteFn       func(ctx context.Context, id uuid.UUID) error
-	ListFn         func(ctx context.Context, filters repository.ListFilters) ([]*entities.School, error)
+	ListFn         func(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.School, error)
 	ExistsByCodeFn func(ctx context.Context, code string) (bool, error)
 }
 
@@ -57,7 +57,7 @@ func (m *MockSchoolRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (m *MockSchoolRepository) List(ctx context.Context, filters repository.ListFilters) ([]*entities.School, error) {
+func (m *MockSchoolRepository) List(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.School, error) {
 	if m.ListFn != nil {
 		return m.ListFn(ctx, filters)
 	}
@@ -155,14 +155,14 @@ func (m *MockAcademicUnitRepository) ExistsBySchoolIDAndCode(ctx context.Context
 // ---------------------------------------------------------------------------
 
 type MockMembershipRepository struct {
-	CreateFn             func(ctx context.Context, membership *entities.Membership) error
-	FindByIDFn           func(ctx context.Context, id uuid.UUID) (*entities.Membership, error)
-	FindByUserFn         func(ctx context.Context, userID uuid.UUID) ([]*entities.Membership, error)
-	FindByUnitFn         func(ctx context.Context, unitID uuid.UUID) ([]*entities.Membership, error)
-	FindByUnitAndRoleFn  func(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool) ([]*entities.Membership, error)
+	CreateFn              func(ctx context.Context, membership *entities.Membership) error
+	FindByIDFn            func(ctx context.Context, id uuid.UUID) (*entities.Membership, error)
+	FindByUserFn          func(ctx context.Context, userID uuid.UUID) ([]*entities.Membership, error)
+	FindByUnitFn          func(ctx context.Context, unitID uuid.UUID) ([]*entities.Membership, error)
+	FindByUnitAndRoleFn   func(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool) ([]*entities.Membership, error)
 	FindByUserAndSchoolFn func(ctx context.Context, userID, schoolID uuid.UUID) (*entities.Membership, error)
-	UpdateFn             func(ctx context.Context, membership *entities.Membership) error
-	DeleteFn             func(ctx context.Context, id uuid.UUID) error
+	UpdateFn              func(ctx context.Context, membership *entities.Membership) error
+	DeleteFn              func(ctx context.Context, id uuid.UUID) error
 }
 
 func (m *MockMembershipRepository) Create(ctx context.Context, membership *entities.Membership) error {
@@ -217,178 +217,6 @@ func (m *MockMembershipRepository) Update(ctx context.Context, membership *entit
 func (m *MockMembershipRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	if m.DeleteFn != nil {
 		return m.DeleteFn(ctx, id)
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
-// MockRoleRepository
-// ---------------------------------------------------------------------------
-
-type MockRoleRepository struct {
-	FindByIDFn    func(ctx context.Context, id uuid.UUID) (*entities.Role, error)
-	FindAllFn     func(ctx context.Context) ([]*entities.Role, error)
-	FindByScopeFn func(ctx context.Context, scope string) ([]*entities.Role, error)
-}
-
-func (m *MockRoleRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.Role, error) {
-	if m.FindByIDFn != nil {
-		return m.FindByIDFn(ctx, id)
-	}
-	return nil, nil
-}
-
-func (m *MockRoleRepository) FindAll(ctx context.Context) ([]*entities.Role, error) {
-	if m.FindAllFn != nil {
-		return m.FindAllFn(ctx)
-	}
-	return nil, nil
-}
-
-func (m *MockRoleRepository) FindByScope(ctx context.Context, scope string) ([]*entities.Role, error) {
-	if m.FindByScopeFn != nil {
-		return m.FindByScopeFn(ctx, scope)
-	}
-	return nil, nil
-}
-
-// ---------------------------------------------------------------------------
-// MockPermissionRepository
-// ---------------------------------------------------------------------------
-
-type MockPermissionRepository struct {
-	FindByIDFn   func(ctx context.Context, id uuid.UUID) (*entities.Permission, error)
-	FindAllFn    func(ctx context.Context) ([]*entities.Permission, error)
-	FindByRoleFn func(ctx context.Context, roleID uuid.UUID) ([]*entities.Permission, error)
-}
-
-func (m *MockPermissionRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.Permission, error) {
-	if m.FindByIDFn != nil {
-		return m.FindByIDFn(ctx, id)
-	}
-	return nil, nil
-}
-
-func (m *MockPermissionRepository) FindAll(ctx context.Context) ([]*entities.Permission, error) {
-	if m.FindAllFn != nil {
-		return m.FindAllFn(ctx)
-	}
-	return nil, nil
-}
-
-func (m *MockPermissionRepository) FindByRole(ctx context.Context, roleID uuid.UUID) ([]*entities.Permission, error) {
-	if m.FindByRoleFn != nil {
-		return m.FindByRoleFn(ctx, roleID)
-	}
-	return nil, nil
-}
-
-// ---------------------------------------------------------------------------
-// MockUserRoleRepository
-// ---------------------------------------------------------------------------
-
-type MockUserRoleRepository struct {
-	FindByUserFn           func(ctx context.Context, userID uuid.UUID) ([]*entities.UserRole, error)
-	FindByUserInContextFn  func(ctx context.Context, userID uuid.UUID, schoolID *uuid.UUID, unitID *uuid.UUID) ([]*entities.UserRole, error)
-	GrantFn                func(ctx context.Context, userRole *entities.UserRole) error
-	RevokeFn               func(ctx context.Context, id uuid.UUID) error
-	RevokeByUserAndRoleFn  func(ctx context.Context, userID, roleID uuid.UUID, schoolID, unitID *uuid.UUID) error
-	UserHasRoleFn          func(ctx context.Context, userID, roleID uuid.UUID, schoolID, unitID *uuid.UUID) (bool, error)
-	GetUserPermissionsFn   func(ctx context.Context, userID uuid.UUID, schoolID, unitID *uuid.UUID) ([]string, error)
-}
-
-func (m *MockUserRoleRepository) FindByUser(ctx context.Context, userID uuid.UUID) ([]*entities.UserRole, error) {
-	if m.FindByUserFn != nil {
-		return m.FindByUserFn(ctx, userID)
-	}
-	return nil, nil
-}
-
-func (m *MockUserRoleRepository) FindByUserInContext(ctx context.Context, userID uuid.UUID, schoolID *uuid.UUID, unitID *uuid.UUID) ([]*entities.UserRole, error) {
-	if m.FindByUserInContextFn != nil {
-		return m.FindByUserInContextFn(ctx, userID, schoolID, unitID)
-	}
-	return nil, nil
-}
-
-func (m *MockUserRoleRepository) Grant(ctx context.Context, userRole *entities.UserRole) error {
-	if m.GrantFn != nil {
-		return m.GrantFn(ctx, userRole)
-	}
-	return nil
-}
-
-func (m *MockUserRoleRepository) Revoke(ctx context.Context, id uuid.UUID) error {
-	if m.RevokeFn != nil {
-		return m.RevokeFn(ctx, id)
-	}
-	return nil
-}
-
-func (m *MockUserRoleRepository) RevokeByUserAndRole(ctx context.Context, userID, roleID uuid.UUID, schoolID, unitID *uuid.UUID) error {
-	if m.RevokeByUserAndRoleFn != nil {
-		return m.RevokeByUserAndRoleFn(ctx, userID, roleID, schoolID, unitID)
-	}
-	return nil
-}
-
-func (m *MockUserRoleRepository) UserHasRole(ctx context.Context, userID, roleID uuid.UUID, schoolID, unitID *uuid.UUID) (bool, error) {
-	if m.UserHasRoleFn != nil {
-		return m.UserHasRoleFn(ctx, userID, roleID, schoolID, unitID)
-	}
-	return false, nil
-}
-
-func (m *MockUserRoleRepository) GetUserPermissions(ctx context.Context, userID uuid.UUID, schoolID, unitID *uuid.UUID) ([]string, error) {
-	if m.GetUserPermissionsFn != nil {
-		return m.GetUserPermissionsFn(ctx, userID, schoolID, unitID)
-	}
-	return nil, nil
-}
-
-// ---------------------------------------------------------------------------
-// MockResourceRepository
-// ---------------------------------------------------------------------------
-
-type MockResourceRepository struct {
-	FindAllFn        func(ctx context.Context) ([]*entities.Resource, error)
-	FindByIDFn       func(ctx context.Context, id uuid.UUID) (*entities.Resource, error)
-	FindMenuVisibleFn func(ctx context.Context) ([]*entities.Resource, error)
-	CreateFn         func(ctx context.Context, resource *entities.Resource) error
-	UpdateFn         func(ctx context.Context, resource *entities.Resource) error
-}
-
-func (m *MockResourceRepository) FindAll(ctx context.Context) ([]*entities.Resource, error) {
-	if m.FindAllFn != nil {
-		return m.FindAllFn(ctx)
-	}
-	return nil, nil
-}
-
-func (m *MockResourceRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.Resource, error) {
-	if m.FindByIDFn != nil {
-		return m.FindByIDFn(ctx, id)
-	}
-	return nil, nil
-}
-
-func (m *MockResourceRepository) FindMenuVisible(ctx context.Context) ([]*entities.Resource, error) {
-	if m.FindMenuVisibleFn != nil {
-		return m.FindMenuVisibleFn(ctx)
-	}
-	return nil, nil
-}
-
-func (m *MockResourceRepository) Create(ctx context.Context, resource *entities.Resource) error {
-	if m.CreateFn != nil {
-		return m.CreateFn(ctx, resource)
-	}
-	return nil
-}
-
-func (m *MockResourceRepository) Update(ctx context.Context, resource *entities.Resource) error {
-	if m.UpdateFn != nil {
-		return m.UpdateFn(ctx, resource)
 	}
 	return nil
 }
@@ -522,7 +350,7 @@ type MockUserRepository struct {
 	ExistsByEmailFn func(ctx context.Context, email string) (bool, error)
 	UpdateFn        func(ctx context.Context, user *entities.User) error
 	DeleteFn        func(ctx context.Context, id uuid.UUID) error
-	ListFn          func(ctx context.Context, filters repository.ListFilters) ([]*entities.User, error)
+	ListFn          func(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.User, error)
 }
 
 func (m *MockUserRepository) Create(ctx context.Context, user *entities.User) error {
@@ -567,150 +395,9 @@ func (m *MockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (m *MockUserRepository) List(ctx context.Context, filters repository.ListFilters) ([]*entities.User, error) {
+func (m *MockUserRepository) List(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.User, error) {
 	if m.ListFn != nil {
 		return m.ListFn(ctx, filters)
 	}
 	return nil, nil
-}
-
-// ---------------------------------------------------------------------------
-// MockScreenTemplateRepository
-// ---------------------------------------------------------------------------
-
-type MockScreenTemplateRepository struct {
-	CreateFn  func(ctx context.Context, template *entities.ScreenTemplate) error
-	GetByIDFn func(ctx context.Context, id uuid.UUID) (*entities.ScreenTemplate, error)
-	ListFn    func(ctx context.Context, filter repository.ScreenTemplateFilter) ([]*entities.ScreenTemplate, int, error)
-	UpdateFn  func(ctx context.Context, template *entities.ScreenTemplate) error
-	DeleteFn  func(ctx context.Context, id uuid.UUID) error
-}
-
-func (m *MockScreenTemplateRepository) Create(ctx context.Context, template *entities.ScreenTemplate) error {
-	if m.CreateFn != nil {
-		return m.CreateFn(ctx, template)
-	}
-	return nil
-}
-
-func (m *MockScreenTemplateRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.ScreenTemplate, error) {
-	if m.GetByIDFn != nil {
-		return m.GetByIDFn(ctx, id)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenTemplateRepository) List(ctx context.Context, filter repository.ScreenTemplateFilter) ([]*entities.ScreenTemplate, int, error) {
-	if m.ListFn != nil {
-		return m.ListFn(ctx, filter)
-	}
-	return nil, 0, nil
-}
-
-func (m *MockScreenTemplateRepository) Update(ctx context.Context, template *entities.ScreenTemplate) error {
-	if m.UpdateFn != nil {
-		return m.UpdateFn(ctx, template)
-	}
-	return nil
-}
-
-func (m *MockScreenTemplateRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	if m.DeleteFn != nil {
-		return m.DeleteFn(ctx, id)
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
-// MockScreenInstanceRepository
-// ---------------------------------------------------------------------------
-
-type MockScreenInstanceRepository struct {
-	CreateFn         func(ctx context.Context, instance *entities.ScreenInstance) error
-	GetByIDFn        func(ctx context.Context, id uuid.UUID) (*entities.ScreenInstance, error)
-	GetByScreenKeyFn func(ctx context.Context, key string) (*entities.ScreenInstance, error)
-	ListFn           func(ctx context.Context, filter repository.ScreenInstanceFilter) ([]*entities.ScreenInstance, int, error)
-	UpdateFn         func(ctx context.Context, instance *entities.ScreenInstance) error
-	DeleteFn         func(ctx context.Context, id uuid.UUID) error
-}
-
-func (m *MockScreenInstanceRepository) Create(ctx context.Context, instance *entities.ScreenInstance) error {
-	if m.CreateFn != nil {
-		return m.CreateFn(ctx, instance)
-	}
-	return nil
-}
-
-func (m *MockScreenInstanceRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.ScreenInstance, error) {
-	if m.GetByIDFn != nil {
-		return m.GetByIDFn(ctx, id)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenInstanceRepository) GetByScreenKey(ctx context.Context, key string) (*entities.ScreenInstance, error) {
-	if m.GetByScreenKeyFn != nil {
-		return m.GetByScreenKeyFn(ctx, key)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenInstanceRepository) List(ctx context.Context, filter repository.ScreenInstanceFilter) ([]*entities.ScreenInstance, int, error) {
-	if m.ListFn != nil {
-		return m.ListFn(ctx, filter)
-	}
-	return nil, 0, nil
-}
-
-func (m *MockScreenInstanceRepository) Update(ctx context.Context, instance *entities.ScreenInstance) error {
-	if m.UpdateFn != nil {
-		return m.UpdateFn(ctx, instance)
-	}
-	return nil
-}
-
-func (m *MockScreenInstanceRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	if m.DeleteFn != nil {
-		return m.DeleteFn(ctx, id)
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
-// MockResourceScreenRepository
-// ---------------------------------------------------------------------------
-
-type MockResourceScreenRepository struct {
-	CreateFn           func(ctx context.Context, rs *entities.ResourceScreen) error
-	GetByResourceIDFn  func(ctx context.Context, resourceID uuid.UUID) ([]*entities.ResourceScreen, error)
-	GetByResourceKeyFn func(ctx context.Context, key string) ([]*entities.ResourceScreen, error)
-	DeleteFn           func(ctx context.Context, id uuid.UUID) error
-}
-
-func (m *MockResourceScreenRepository) Create(ctx context.Context, rs *entities.ResourceScreen) error {
-	if m.CreateFn != nil {
-		return m.CreateFn(ctx, rs)
-	}
-	return nil
-}
-
-func (m *MockResourceScreenRepository) GetByResourceID(ctx context.Context, resourceID uuid.UUID) ([]*entities.ResourceScreen, error) {
-	if m.GetByResourceIDFn != nil {
-		return m.GetByResourceIDFn(ctx, resourceID)
-	}
-	return nil, nil
-}
-
-func (m *MockResourceScreenRepository) GetByResourceKey(ctx context.Context, key string) ([]*entities.ResourceScreen, error) {
-	if m.GetByResourceKeyFn != nil {
-		return m.GetByResourceKeyFn(ctx, key)
-	}
-	return nil, nil
-}
-
-func (m *MockResourceScreenRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	if m.DeleteFn != nil {
-		return m.DeleteFn(ctx, id)
-	}
-	return nil
 }

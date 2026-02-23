@@ -46,20 +46,22 @@ type LoggingConfig struct {
 }
 
 type AuthConfig struct {
-	JWT              JWTConfig              `envPrefix:"JWT_"`
-	InternalServices InternalServicesConfig `envPrefix:"INTERNAL_"`
+	JWT            JWTConfig            `envPrefix:"JWT_"`
+	APIIamPlatform APIIamPlatformConfig `envPrefix:"API_IAM_PLATFORM_"`
 }
 
 type JWTConfig struct {
-	Secret               string        `env:"SECRET,required"`
-	Issuer               string        `env:"ISSUER"                 envDefault:"edugo-central"`
-	AccessTokenDuration  time.Duration `env:"ACCESS_TOKEN_DURATION"  envDefault:"15m"`
-	RefreshTokenDuration time.Duration `env:"REFRESH_TOKEN_DURATION" envDefault:"168h"`
+	Secret string `env:"SECRET,required"`
+	Issuer string `env:"ISSUER" envDefault:"edugo-central"`
 }
 
-type InternalServicesConfig struct {
-	APIKeys  string `env:"API_KEYS"`
-	IPRanges string `env:"IP_RANGES"`
+type APIIamPlatformConfig struct {
+	BaseURL         string        `env:"BASE_URL"         envDefault:"http://localhost:8070/api"`
+	Timeout         time.Duration `env:"TIMEOUT"          envDefault:"5s"`
+	CacheTTL        time.Duration `env:"CACHE_TTL"        envDefault:"60s"`
+	CacheEnabled    bool          `env:"CACHE_ENABLED"    envDefault:"true"`
+	RemoteEnabled   bool          `env:"REMOTE_ENABLED"   envDefault:"false"`
+	FallbackEnabled bool          `env:"FALLBACK_ENABLED" envDefault:"false"`
 }
 
 type DefaultsConfig struct {

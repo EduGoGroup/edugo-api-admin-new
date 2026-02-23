@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
-	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
 	"github.com/EduGoGroup/edugo-shared/auth"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 )
 
@@ -17,18 +17,18 @@ import (
 type UserService interface {
 	CreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.UserResponse, error)
 	GetUser(ctx context.Context, id string) (*dto.UserResponse, error)
-	ListUsers(ctx context.Context, filters repository.ListFilters) ([]*dto.UserResponse, error)
+	ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, error)
 	UpdateUser(ctx context.Context, id string, req dto.UpdateUserRequest) (*dto.UserResponse, error)
 	DeleteUser(ctx context.Context, id string) error
 }
 
 type userService struct {
-	userRepo repository.UserRepository
+	userRepo sharedrepo.UserRepository
 	logger   logger.Logger
 }
 
 // NewUserService creates a new user service
-func NewUserService(userRepo repository.UserRepository, logger logger.Logger) UserService {
+func NewUserService(userRepo sharedrepo.UserRepository, logger logger.Logger) UserService {
 	return &userService{userRepo: userRepo, logger: logger}
 }
 
@@ -81,7 +81,7 @@ func (s *userService) GetUser(ctx context.Context, id string) (*dto.UserResponse
 	return dto.ToUserResponse(user), nil
 }
 
-func (s *userService) ListUsers(ctx context.Context, filters repository.ListFilters) ([]*dto.UserResponse, error) {
+func (s *userService) ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, error) {
 	users, err := s.userRepo.List(ctx, filters)
 	if err != nil {
 		return nil, errors.NewDatabaseError("list users", err)

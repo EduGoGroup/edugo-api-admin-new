@@ -8,7 +8,7 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
-	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/EduGoGroup/edugo-shared/logger"
 )
 
@@ -64,7 +64,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Security BearerAuth
 // @Router /users [get]
 func (h *UserHandler) ListUsers(c *gin.Context) {
-	var filters repository.ListFilters
+	var filters sharedrepo.ListFilters
 
 	if isActiveStr := c.Query("is_active"); isActiveStr != "" {
 		isActive, err := strconv.ParseBool(isActiveStr)

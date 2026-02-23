@@ -4,10 +4,7 @@ import (
 	"context"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
-	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
-	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
-	authDTO "github.com/EduGoGroup/edugo-api-admin-new/internal/auth/dto"
-	"github.com/EduGoGroup/edugo-shared/auth"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 )
 
 // ---------------------------------------------------------------------------
@@ -70,15 +67,15 @@ func (m *MockSchoolService) DeleteSchool(ctx context.Context, id string) error {
 // ---------------------------------------------------------------------------
 
 type MockAcademicUnitService struct {
-	CreateUnitFn       func(ctx context.Context, schoolID string, req dto.CreateAcademicUnitRequest) (*dto.AcademicUnitResponse, error)
-	GetUnitFn          func(ctx context.Context, id string) (*dto.AcademicUnitResponse, error)
+	CreateUnitFn        func(ctx context.Context, schoolID string, req dto.CreateAcademicUnitRequest) (*dto.AcademicUnitResponse, error)
+	GetUnitFn           func(ctx context.Context, id string) (*dto.AcademicUnitResponse, error)
 	ListUnitsBySchoolFn func(ctx context.Context, schoolID string) ([]dto.AcademicUnitResponse, error)
-	GetUnitTreeFn      func(ctx context.Context, schoolID string) ([]*dto.UnitTreeNode, error)
-	ListUnitsByTypeFn  func(ctx context.Context, schoolID, unitType string) ([]dto.AcademicUnitResponse, error)
-	UpdateUnitFn       func(ctx context.Context, id string, req dto.UpdateAcademicUnitRequest) (*dto.AcademicUnitResponse, error)
-	DeleteUnitFn       func(ctx context.Context, id string) error
-	RestoreUnitFn      func(ctx context.Context, id string) (*dto.AcademicUnitResponse, error)
-	GetHierarchyPathFn func(ctx context.Context, id string) ([]dto.AcademicUnitResponse, error)
+	GetUnitTreeFn       func(ctx context.Context, schoolID string) ([]*dto.UnitTreeNode, error)
+	ListUnitsByTypeFn   func(ctx context.Context, schoolID, unitType string) ([]dto.AcademicUnitResponse, error)
+	UpdateUnitFn        func(ctx context.Context, id string, req dto.UpdateAcademicUnitRequest) (*dto.AcademicUnitResponse, error)
+	DeleteUnitFn        func(ctx context.Context, id string) error
+	RestoreUnitFn       func(ctx context.Context, id string) (*dto.AcademicUnitResponse, error)
+	GetHierarchyPathFn  func(ctx context.Context, id string) ([]dto.AcademicUnitResponse, error)
 }
 
 func (m *MockAcademicUnitService) CreateUnit(ctx context.Context, schoolID string, req dto.CreateAcademicUnitRequest) (*dto.AcademicUnitResponse, error) {
@@ -216,146 +213,6 @@ func (m *MockMembershipService) ExpireMembership(ctx context.Context, id string)
 }
 
 // ---------------------------------------------------------------------------
-// MockRoleService
-// ---------------------------------------------------------------------------
-
-type MockRoleService struct {
-	GetRolesFn           func(ctx context.Context, scope string) (*dto.RolesResponse, error)
-	GetRoleFn            func(ctx context.Context, id string) (*dto.RoleDTO, error)
-	GetRolePermissionsFn func(ctx context.Context, roleID string) (*dto.PermissionsResponse, error)
-	GetUserRolesFn       func(ctx context.Context, userID string) (*dto.UserRolesResponse, error)
-	GrantRoleToUserFn    func(ctx context.Context, userID string, req *dto.GrantRoleRequest, grantedBy string) (*dto.GrantRoleResponse, error)
-	RevokeRoleFromUserFn func(ctx context.Context, userID, roleID string) error
-}
-
-func (m *MockRoleService) GetRoles(ctx context.Context, scope string) (*dto.RolesResponse, error) {
-	if m.GetRolesFn != nil {
-		return m.GetRolesFn(ctx, scope)
-	}
-	return nil, nil
-}
-
-func (m *MockRoleService) GetRole(ctx context.Context, id string) (*dto.RoleDTO, error) {
-	if m.GetRoleFn != nil {
-		return m.GetRoleFn(ctx, id)
-	}
-	return nil, nil
-}
-
-func (m *MockRoleService) GetRolePermissions(ctx context.Context, roleID string) (*dto.PermissionsResponse, error) {
-	if m.GetRolePermissionsFn != nil {
-		return m.GetRolePermissionsFn(ctx, roleID)
-	}
-	return nil, nil
-}
-
-func (m *MockRoleService) GetUserRoles(ctx context.Context, userID string) (*dto.UserRolesResponse, error) {
-	if m.GetUserRolesFn != nil {
-		return m.GetUserRolesFn(ctx, userID)
-	}
-	return nil, nil
-}
-
-func (m *MockRoleService) GrantRoleToUser(ctx context.Context, userID string, req *dto.GrantRoleRequest, grantedBy string) (*dto.GrantRoleResponse, error) {
-	if m.GrantRoleToUserFn != nil {
-		return m.GrantRoleToUserFn(ctx, userID, req, grantedBy)
-	}
-	return nil, nil
-}
-
-func (m *MockRoleService) RevokeRoleFromUser(ctx context.Context, userID, roleID string) error {
-	if m.RevokeRoleFromUserFn != nil {
-		return m.RevokeRoleFromUserFn(ctx, userID, roleID)
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
-// MockResourceService
-// ---------------------------------------------------------------------------
-
-type MockResourceService struct {
-	ListResourcesFn  func(ctx context.Context) (*dto.ResourcesResponse, error)
-	GetResourceFn    func(ctx context.Context, id string) (*dto.ResourceDTO, error)
-	CreateResourceFn func(ctx context.Context, req dto.CreateResourceRequest) (*dto.ResourceDTO, error)
-	UpdateResourceFn func(ctx context.Context, id string, req dto.UpdateResourceRequest) (*dto.ResourceDTO, error)
-}
-
-func (m *MockResourceService) ListResources(ctx context.Context) (*dto.ResourcesResponse, error) {
-	if m.ListResourcesFn != nil {
-		return m.ListResourcesFn(ctx)
-	}
-	return nil, nil
-}
-
-func (m *MockResourceService) GetResource(ctx context.Context, id string) (*dto.ResourceDTO, error) {
-	if m.GetResourceFn != nil {
-		return m.GetResourceFn(ctx, id)
-	}
-	return nil, nil
-}
-
-func (m *MockResourceService) CreateResource(ctx context.Context, req dto.CreateResourceRequest) (*dto.ResourceDTO, error) {
-	if m.CreateResourceFn != nil {
-		return m.CreateResourceFn(ctx, req)
-	}
-	return nil, nil
-}
-
-func (m *MockResourceService) UpdateResource(ctx context.Context, id string, req dto.UpdateResourceRequest) (*dto.ResourceDTO, error) {
-	if m.UpdateResourceFn != nil {
-		return m.UpdateResourceFn(ctx, id, req)
-	}
-	return nil, nil
-}
-
-// ---------------------------------------------------------------------------
-// MockMenuService
-// ---------------------------------------------------------------------------
-
-type MockMenuService struct {
-	GetMenuForUserFn func(ctx context.Context, permissions []string) (*dto.MenuResponse, error)
-	GetFullMenuFn    func(ctx context.Context) (*dto.MenuResponse, error)
-}
-
-func (m *MockMenuService) GetMenuForUser(ctx context.Context, permissions []string) (*dto.MenuResponse, error) {
-	if m.GetMenuForUserFn != nil {
-		return m.GetMenuForUserFn(ctx, permissions)
-	}
-	return nil, nil
-}
-
-func (m *MockMenuService) GetFullMenu(ctx context.Context) (*dto.MenuResponse, error) {
-	if m.GetFullMenuFn != nil {
-		return m.GetFullMenuFn(ctx)
-	}
-	return nil, nil
-}
-
-// ---------------------------------------------------------------------------
-// MockPermissionService
-// ---------------------------------------------------------------------------
-
-type MockPermissionService struct {
-	ListPermissionsFn func(ctx context.Context) (*dto.PermissionsResponse, error)
-	GetPermissionFn   func(ctx context.Context, id string) (*dto.PermissionDTO, error)
-}
-
-func (m *MockPermissionService) ListPermissions(ctx context.Context) (*dto.PermissionsResponse, error) {
-	if m.ListPermissionsFn != nil {
-		return m.ListPermissionsFn(ctx)
-	}
-	return nil, nil
-}
-
-func (m *MockPermissionService) GetPermission(ctx context.Context, id string) (*dto.PermissionDTO, error) {
-	if m.GetPermissionFn != nil {
-		return m.GetPermissionFn(ctx, id)
-	}
-	return nil, nil
-}
-
-// ---------------------------------------------------------------------------
 // MockSubjectService
 // ---------------------------------------------------------------------------
 
@@ -458,187 +315,13 @@ func (m *MockGuardianService) GetStudentGuardians(ctx context.Context, studentID
 }
 
 // ---------------------------------------------------------------------------
-// MockScreenConfigService
-// ---------------------------------------------------------------------------
-
-type MockScreenConfigService struct {
-	CreateTemplateFn       func(ctx context.Context, req *service.CreateTemplateRequest) (*service.ScreenTemplateDTO, error)
-	GetTemplateFn          func(ctx context.Context, id string) (*service.ScreenTemplateDTO, error)
-	ListTemplatesFn        func(ctx context.Context, filter service.TemplateFilter) ([]*service.ScreenTemplateDTO, int, error)
-	UpdateTemplateFn       func(ctx context.Context, id string, req *service.UpdateTemplateRequest) (*service.ScreenTemplateDTO, error)
-	DeleteTemplateFn       func(ctx context.Context, id string) error
-	CreateInstanceFn       func(ctx context.Context, req *service.CreateInstanceRequest) (*service.ScreenInstanceDTO, error)
-	GetInstanceFn          func(ctx context.Context, id string) (*service.ScreenInstanceDTO, error)
-	GetInstanceByKeyFn     func(ctx context.Context, key string) (*service.ScreenInstanceDTO, error)
-	ListInstancesFn        func(ctx context.Context, filter service.InstanceFilter) ([]*service.ScreenInstanceDTO, int, error)
-	UpdateInstanceFn       func(ctx context.Context, id string, req *service.UpdateInstanceRequest) (*service.ScreenInstanceDTO, error)
-	DeleteInstanceFn       func(ctx context.Context, id string) error
-	ResolveScreenByKeyFn   func(ctx context.Context, key string) (*service.CombinedScreenDTO, error)
-	LinkScreenToResourceFn func(ctx context.Context, req *service.LinkScreenRequest) (*service.ResourceScreenDTO, error)
-	GetScreensForResourceFn func(ctx context.Context, resourceID string) ([]*service.ResourceScreenDTO, error)
-	UnlinkScreenFn         func(ctx context.Context, id string) error
-}
-
-func (m *MockScreenConfigService) CreateTemplate(ctx context.Context, req *service.CreateTemplateRequest) (*service.ScreenTemplateDTO, error) {
-	if m.CreateTemplateFn != nil {
-		return m.CreateTemplateFn(ctx, req)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) GetTemplate(ctx context.Context, id string) (*service.ScreenTemplateDTO, error) {
-	if m.GetTemplateFn != nil {
-		return m.GetTemplateFn(ctx, id)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) ListTemplates(ctx context.Context, filter service.TemplateFilter) ([]*service.ScreenTemplateDTO, int, error) {
-	if m.ListTemplatesFn != nil {
-		return m.ListTemplatesFn(ctx, filter)
-	}
-	return nil, 0, nil
-}
-
-func (m *MockScreenConfigService) UpdateTemplate(ctx context.Context, id string, req *service.UpdateTemplateRequest) (*service.ScreenTemplateDTO, error) {
-	if m.UpdateTemplateFn != nil {
-		return m.UpdateTemplateFn(ctx, id, req)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) DeleteTemplate(ctx context.Context, id string) error {
-	if m.DeleteTemplateFn != nil {
-		return m.DeleteTemplateFn(ctx, id)
-	}
-	return nil
-}
-
-func (m *MockScreenConfigService) CreateInstance(ctx context.Context, req *service.CreateInstanceRequest) (*service.ScreenInstanceDTO, error) {
-	if m.CreateInstanceFn != nil {
-		return m.CreateInstanceFn(ctx, req)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) GetInstance(ctx context.Context, id string) (*service.ScreenInstanceDTO, error) {
-	if m.GetInstanceFn != nil {
-		return m.GetInstanceFn(ctx, id)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) GetInstanceByKey(ctx context.Context, key string) (*service.ScreenInstanceDTO, error) {
-	if m.GetInstanceByKeyFn != nil {
-		return m.GetInstanceByKeyFn(ctx, key)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) ListInstances(ctx context.Context, filter service.InstanceFilter) ([]*service.ScreenInstanceDTO, int, error) {
-	if m.ListInstancesFn != nil {
-		return m.ListInstancesFn(ctx, filter)
-	}
-	return nil, 0, nil
-}
-
-func (m *MockScreenConfigService) UpdateInstance(ctx context.Context, id string, req *service.UpdateInstanceRequest) (*service.ScreenInstanceDTO, error) {
-	if m.UpdateInstanceFn != nil {
-		return m.UpdateInstanceFn(ctx, id, req)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) DeleteInstance(ctx context.Context, id string) error {
-	if m.DeleteInstanceFn != nil {
-		return m.DeleteInstanceFn(ctx, id)
-	}
-	return nil
-}
-
-func (m *MockScreenConfigService) ResolveScreenByKey(ctx context.Context, key string) (*service.CombinedScreenDTO, error) {
-	if m.ResolveScreenByKeyFn != nil {
-		return m.ResolveScreenByKeyFn(ctx, key)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) LinkScreenToResource(ctx context.Context, req *service.LinkScreenRequest) (*service.ResourceScreenDTO, error) {
-	if m.LinkScreenToResourceFn != nil {
-		return m.LinkScreenToResourceFn(ctx, req)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) GetScreensForResource(ctx context.Context, resourceID string) ([]*service.ResourceScreenDTO, error) {
-	if m.GetScreensForResourceFn != nil {
-		return m.GetScreensForResourceFn(ctx, resourceID)
-	}
-	return nil, nil
-}
-
-func (m *MockScreenConfigService) UnlinkScreen(ctx context.Context, id string) error {
-	if m.UnlinkScreenFn != nil {
-		return m.UnlinkScreenFn(ctx, id)
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
-// MockAuthService
-// ---------------------------------------------------------------------------
-
-type MockAuthService struct {
-	LoginFn                 func(ctx context.Context, email, password string) (*authDTO.LoginResponse, error)
-	LogoutFn                func(ctx context.Context, accessToken string) error
-	RefreshTokenFn          func(ctx context.Context, refreshToken string) (*authDTO.RefreshResponse, error)
-	SwitchContextFn         func(ctx context.Context, userID, targetSchoolID string) (*authDTO.SwitchContextResponse, error)
-	GetAvailableContextsFn  func(ctx context.Context, userID string, currentContext *auth.UserContext) (*authDTO.AvailableContextsResponse, error)
-}
-
-func (m *MockAuthService) Login(ctx context.Context, email, password string) (*authDTO.LoginResponse, error) {
-	if m.LoginFn != nil {
-		return m.LoginFn(ctx, email, password)
-	}
-	return nil, nil
-}
-
-func (m *MockAuthService) Logout(ctx context.Context, accessToken string) error {
-	if m.LogoutFn != nil {
-		return m.LogoutFn(ctx, accessToken)
-	}
-	return nil
-}
-
-func (m *MockAuthService) RefreshToken(ctx context.Context, refreshToken string) (*authDTO.RefreshResponse, error) {
-	if m.RefreshTokenFn != nil {
-		return m.RefreshTokenFn(ctx, refreshToken)
-	}
-	return nil, nil
-}
-
-func (m *MockAuthService) SwitchContext(ctx context.Context, userID, targetSchoolID string) (*authDTO.SwitchContextResponse, error) {
-	if m.SwitchContextFn != nil {
-		return m.SwitchContextFn(ctx, userID, targetSchoolID)
-	}
-	return nil, nil
-}
-
-func (m *MockAuthService) GetAvailableContexts(ctx context.Context, userID string, currentContext *auth.UserContext) (*authDTO.AvailableContextsResponse, error) {
-	if m.GetAvailableContextsFn != nil {
-		return m.GetAvailableContextsFn(ctx, userID, currentContext)
-	}
-	return nil, nil
-}
-
-// ---------------------------------------------------------------------------
 // MockUserService
 // ---------------------------------------------------------------------------
 
 type MockUserService struct {
 	CreateUserFn func(ctx context.Context, req dto.CreateUserRequest) (*dto.UserResponse, error)
 	GetUserFn    func(ctx context.Context, id string) (*dto.UserResponse, error)
-	ListUsersFn  func(ctx context.Context, filters repository.ListFilters) ([]*dto.UserResponse, error)
+	ListUsersFn  func(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, error)
 	UpdateUserFn func(ctx context.Context, id string, req dto.UpdateUserRequest) (*dto.UserResponse, error)
 	DeleteUserFn func(ctx context.Context, id string) error
 }
@@ -657,7 +340,7 @@ func (m *MockUserService) GetUser(ctx context.Context, id string) (*dto.UserResp
 	return nil, nil
 }
 
-func (m *MockUserService) ListUsers(ctx context.Context, filters repository.ListFilters) ([]*dto.UserResponse, error) {
+func (m *MockUserService) ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, error) {
 	if m.ListUsersFn != nil {
 		return m.ListUsersFn(ctx, filters)
 	}
