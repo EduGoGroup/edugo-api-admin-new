@@ -516,10 +516,20 @@ func (m *MockGuardianRepository) ExistsActiveRelation(ctx context.Context, guard
 // ---------------------------------------------------------------------------
 
 type MockUserRepository struct {
-	FindByIDFn    func(ctx context.Context, id uuid.UUID) (*entities.User, error)
-	FindByEmailFn func(ctx context.Context, email string) (*entities.User, error)
-	UpdateFn      func(ctx context.Context, user *entities.User) error
-	ListFn        func(ctx context.Context, filters repository.ListFilters) ([]*entities.User, error)
+	CreateFn        func(ctx context.Context, user *entities.User) error
+	FindByIDFn      func(ctx context.Context, id uuid.UUID) (*entities.User, error)
+	FindByEmailFn   func(ctx context.Context, email string) (*entities.User, error)
+	ExistsByEmailFn func(ctx context.Context, email string) (bool, error)
+	UpdateFn        func(ctx context.Context, user *entities.User) error
+	DeleteFn        func(ctx context.Context, id uuid.UUID) error
+	ListFn          func(ctx context.Context, filters repository.ListFilters) ([]*entities.User, error)
+}
+
+func (m *MockUserRepository) Create(ctx context.Context, user *entities.User) error {
+	if m.CreateFn != nil {
+		return m.CreateFn(ctx, user)
+	}
+	return nil
 }
 
 func (m *MockUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.User, error) {
@@ -536,9 +546,23 @@ func (m *MockUserRepository) FindByEmail(ctx context.Context, email string) (*en
 	return nil, nil
 }
 
+func (m *MockUserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
+	if m.ExistsByEmailFn != nil {
+		return m.ExistsByEmailFn(ctx, email)
+	}
+	return false, nil
+}
+
 func (m *MockUserRepository) Update(ctx context.Context, user *entities.User) error {
 	if m.UpdateFn != nil {
 		return m.UpdateFn(ctx, user)
+	}
+	return nil
+}
+
+func (m *MockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	if m.DeleteFn != nil {
+		return m.DeleteFn(ctx, id)
 	}
 	return nil
 }

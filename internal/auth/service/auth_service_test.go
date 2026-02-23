@@ -14,10 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupAuthTestDeps() (*mock.MockUserRepository, *mock.MockUserRoleRepository, *mock.MockRoleRepository, *authService.TokenService) {
+func setupAuthTestDeps() (*mock.MockUserRepository, *mock.MockUserRoleRepository, *mock.MockRoleRepository, *mock.MockMembershipRepository, *mock.MockSchoolRepository, *authService.TokenService) {
 	jwtManager := auth.NewJWTManager("test-secret-key-for-auth-testing", "edugo-test")
 	tokenSvc := authService.NewTokenService(jwtManager, 15*time.Minute, 7*24*time.Hour)
-	return &mock.MockUserRepository{}, &mock.MockUserRoleRepository{}, &mock.MockRoleRepository{}, tokenSvc
+	return &mock.MockUserRepository{}, &mock.MockUserRoleRepository{}, &mock.MockRoleRepository{}, &mock.MockMembershipRepository{}, &mock.MockSchoolRepository{}, tokenSvc
 }
 
 func TestAuthService_Login(t *testing.T) {
@@ -29,7 +29,7 @@ func TestAuthService_Login(t *testing.T) {
 		name        string
 		email       string
 		password    string
-		setupMock   func(ur *mock.MockUserRepository, urr *mock.MockUserRoleRepository, rr *mock.MockRoleRepository)
+		setupMock   func(ur *mock.MockUserRepository, urr *mock.MockUserRoleRepository, rr *mock.MockRoleRepository, mr *mock.MockMembershipRepository, sr *mock.MockSchoolRepository)
 		wantErr     bool
 		errTarget   error
 	}{
@@ -37,11 +37,11 @@ func TestAuthService_Login(t *testing.T) {
 			name:     "success - valid login",
 			email:    "admin@test.com",
 			password: "correctpassword",
-			setupMock: func(ur *mock.MockUserRepository, urr *mock.MockUserRoleRepository, rr *mock.MockRoleRepository) {
+			setupMock: func(ur *mock.MockUserRepository, urr *mock.MockUserRoleRepository, rr *mock.MockRoleRepository, mr *mock.MockMembershipRepository, sr *mock.MockSchoolRepository) {
 				ur.FindByEmailFn = func(_ context.Context, _ string) (*entities.User, error) {
 					return &entities.User{
 						ID: uuid.New(), Email: "admin@test.com", PasswordHash: hashedPassword,
-						FirstName: "Admin", LastName: "User", IsActive: true, SchoolID: &schoolID,
+						FirstName: "Admin", LastName: "User", IsActive: true,
 					}, nil
 				}
 				urr.FindByUserInContextFn = func(_ context.Context, _ uuid.UUID, _ *uuid.UUID, _ *uuid.UUID) ([]*entities.UserRole, error) {
@@ -51,6 +51,14 @@ func TestAuthService_Login(t *testing.T) {
 				}
 				rr.FindByIDFn = func(_ context.Context, _ uuid.UUID) (*entities.Role, error) {
 					return &entities.Role{ID: roleID, Name: "super_admin", DisplayName: "Super Admin"}, nil
+				}
+				mr.FindByUserFn = func(_ context.Context, _ uuid.UUID) ([]*entities.Membership, error) {
+					return []*entities.Membership{
+						{ID: uuid.New(), SchoolID: schoolID, IsActive: true},
+					}, nil
+				}
+				sr.FindByIDFn = func(_ context.Context, id uuid.UUID) (*entities.School, error) {
+					return &entities.School{ID: id, Name: "Test School"}, nil
 				}
 				urr.GetUserPermissionsFn = func(_ context.Context, _ uuid.UUID, _, _ *uuid.UUID) ([]string, error) {
 					return []string{"schools:read", "schools:create"}, nil
@@ -63,7 +71,7 @@ func TestAuthService_Login(t *testing.T) {
 			name:     "error - user not found",
 			email:    "nonexistent@test.com",
 			password: "any",
-			setupMock: func(ur *mock.MockUserRepository, _ *mock.MockUserRoleRepository, _ *mock.MockRoleRepository) {
+			setupMock: func(ur *mock.MockUserRepository, _ *mock.MockUserRoleRepository, _ *mock.MockRoleRepository, _ *mock.MockMembershipRepository, _ *mock.MockSchoolRepository) {
 				ur.FindByEmailFn = func(_ context.Context, _ string) (*entities.User, error) { return nil, nil }
 			},
 			wantErr:   true,
@@ -73,7 +81,7 @@ func TestAuthService_Login(t *testing.T) {
 			name:     "error - user inactive",
 			email:    "inactive@test.com",
 			password: "any",
-			setupMock: func(ur *mock.MockUserRepository, _ *mock.MockUserRoleRepository, _ *mock.MockRoleRepository) {
+			setupMock: func(ur *mock.MockUserRepository, _ *mock.MockUserRoleRepository, _ *mock.MockRoleRepository, _ *mock.MockMembershipRepository, _ *mock.MockSchoolRepository) {
 				ur.FindByEmailFn = func(_ context.Context, _ string) (*entities.User, error) {
 					return &entities.User{
 						ID: uuid.New(), Email: "inactive@test.com", PasswordHash: hashedPassword,
@@ -88,7 +96,7 @@ func TestAuthService_Login(t *testing.T) {
 			name:     "error - wrong password",
 			email:    "admin@test.com",
 			password: "wrongpassword",
-			setupMock: func(ur *mock.MockUserRepository, _ *mock.MockUserRoleRepository, _ *mock.MockRoleRepository) {
+			setupMock: func(ur *mock.MockUserRepository, _ *mock.MockUserRoleRepository, _ *mock.MockRoleRepository, _ *mock.MockMembershipRepository, _ *mock.MockSchoolRepository) {
 				ur.FindByEmailFn = func(_ context.Context, _ string) (*entities.User, error) {
 					return &entities.User{
 						ID: uuid.New(), Email: "admin@test.com", PasswordHash: hashedPassword,
@@ -103,12 +111,12 @@ func TestAuthService_Login(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			userRepo, userRoleRepo, roleRepo, tokenSvc := setupAuthTestDeps()
+			userRepo, userRoleRepo, roleRepo, membershipRepo, schoolRepo, tokenSvc := setupAuthTestDeps()
 			if tt.setupMock != nil {
-				tt.setupMock(userRepo, userRoleRepo, roleRepo)
+				tt.setupMock(userRepo, userRoleRepo, roleRepo, membershipRepo, schoolRepo)
 			}
 
-			svc := authService.NewAuthService(userRepo, userRoleRepo, roleRepo, tokenSvc, mock.NewMockLogger())
+			svc := authService.NewAuthService(userRepo, userRoleRepo, roleRepo, membershipRepo, schoolRepo, tokenSvc, mock.NewMockLogger())
 			result, err := svc.Login(context.Background(), tt.email, tt.password)
 
 			if tt.wantErr {
@@ -144,8 +152,8 @@ func TestAuthService_Logout(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			userRepo, userRoleRepo, roleRepo, tokenSvc := setupAuthTestDeps()
-			svc := authService.NewAuthService(userRepo, userRoleRepo, roleRepo, tokenSvc, mock.NewMockLogger())
+			userRepo, userRoleRepo, roleRepo, membershipRepo, schoolRepo, tokenSvc := setupAuthTestDeps()
+			svc := authService.NewAuthService(userRepo, userRoleRepo, roleRepo, membershipRepo, schoolRepo, tokenSvc, mock.NewMockLogger())
 			err := svc.Logout(context.Background(), tt.token)
 
 			if tt.wantErr {
@@ -174,8 +182,8 @@ func TestAuthService_RefreshToken(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			userRepo, userRoleRepo, roleRepo, tokenSvc := setupAuthTestDeps()
-			svc := authService.NewAuthService(userRepo, userRoleRepo, roleRepo, tokenSvc, mock.NewMockLogger())
+			userRepo, userRoleRepo, roleRepo, membershipRepo, schoolRepo, tokenSvc := setupAuthTestDeps()
+			svc := authService.NewAuthService(userRepo, userRoleRepo, roleRepo, membershipRepo, schoolRepo, tokenSvc, mock.NewMockLogger())
 			result, err := svc.RefreshToken(context.Background(), tt.token)
 
 			if tt.wantErr {
