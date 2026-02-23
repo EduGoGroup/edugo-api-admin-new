@@ -22,7 +22,13 @@ func NewResourceHandler(resourceService service.ResourceService, logger logger.L
 // ListResources godoc
 // @Summary List all resources
 // @Tags resources
-// @Router /v1/resources [get]
+// @Accept json
+// @Produce json
+// @Success 200 {array} dto.ResourceDTO
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /resources [get]
 func (h *ResourceHandler) ListResources(c *gin.Context) {
 	resources, err := h.resourceService.ListResources(c.Request.Context())
 	if err != nil {
@@ -35,7 +41,15 @@ func (h *ResourceHandler) ListResources(c *gin.Context) {
 // GetResource godoc
 // @Summary Get a resource by ID
 // @Tags resources
-// @Router /v1/resources/{id} [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "Resource ID (UUID)"
+// @Success 200 {object} dto.ResourceDTO
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /resources/{id} [get]
 func (h *ResourceHandler) GetResource(c *gin.Context) {
 	id := c.Param("id")
 	resource, err := h.resourceService.GetResource(c.Request.Context(), id)
@@ -49,7 +63,15 @@ func (h *ResourceHandler) GetResource(c *gin.Context) {
 // CreateResource godoc
 // @Summary Create a resource
 // @Tags resources
-// @Router /v1/resources [post]
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateResourceRequest true "Resource data"
+// @Success 201 {object} dto.ResourceDTO
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /resources [post]
 func (h *ResourceHandler) CreateResource(c *gin.Context) {
 	var req dto.CreateResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -67,7 +89,17 @@ func (h *ResourceHandler) CreateResource(c *gin.Context) {
 // UpdateResource godoc
 // @Summary Update a resource
 // @Tags resources
-// @Router /v1/resources/{id} [put]
+// @Accept json
+// @Produce json
+// @Param id path string true "Resource ID (UUID)"
+// @Param request body dto.UpdateResourceRequest true "Resource update data"
+// @Success 200 {object} dto.ResourceDTO
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /resources/{id} [put]
 func (h *ResourceHandler) UpdateResource(c *gin.Context) {
 	id := c.Param("id")
 	var req dto.UpdateResourceRequest

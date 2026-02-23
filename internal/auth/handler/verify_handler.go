@@ -30,7 +30,7 @@ func NewVerifyHandler(tokenService *service.TokenService) *VerifyHandler {
 // @Param request body dto.VerifyTokenRequest true "Token to verify"
 // @Success 200 {object} dto.VerifyTokenResponse
 // @Failure 400 {object} dto.ErrorResponse
-// @Router /v1/auth/verify [post]
+// @Router /auth/verify [post]
 func (h *VerifyHandler) VerifyToken(c *gin.Context) {
 	startTime := time.Now()
 

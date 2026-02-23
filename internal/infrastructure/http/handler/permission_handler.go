@@ -21,7 +21,13 @@ func NewPermissionHandler(permissionService service.PermissionService, logger lo
 // ListPermissions godoc
 // @Summary List all permissions
 // @Tags permissions
-// @Router /v1/permissions [get]
+// @Accept json
+// @Produce json
+// @Success 200 {array} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Security BearerAuth
+// @Router /permissions [get]
 func (h *PermissionHandler) ListPermissions(c *gin.Context) {
 	perms, err := h.permissionService.ListPermissions(c.Request.Context())
 	if err != nil {
@@ -34,7 +40,15 @@ func (h *PermissionHandler) ListPermissions(c *gin.Context) {
 // GetPermission godoc
 // @Summary Get a permission by ID
 // @Tags permissions
-// @Router /v1/permissions/{id} [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "Permission ID (UUID)"
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Security BearerAuth
+// @Router /permissions/{id} [get]
 func (h *PermissionHandler) GetPermission(c *gin.Context) {
 	id := c.Param("id")
 	perm, err := h.permissionService.GetPermission(c.Request.Context(), id)

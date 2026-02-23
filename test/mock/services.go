@@ -5,7 +5,9 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
+	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	authDTO "github.com/EduGoGroup/edugo-api-admin-new/internal/auth/dto"
+	"github.com/EduGoGroup/edugo-shared/auth"
 )
 
 // ---------------------------------------------------------------------------
@@ -587,9 +589,11 @@ func (m *MockScreenConfigService) UnlinkScreen(ctx context.Context, id string) e
 // ---------------------------------------------------------------------------
 
 type MockAuthService struct {
-	LoginFn        func(ctx context.Context, email, password string) (*authDTO.LoginResponse, error)
-	LogoutFn       func(ctx context.Context, accessToken string) error
-	RefreshTokenFn func(ctx context.Context, refreshToken string) (*authDTO.RefreshResponse, error)
+	LoginFn                 func(ctx context.Context, email, password string) (*authDTO.LoginResponse, error)
+	LogoutFn                func(ctx context.Context, accessToken string) error
+	RefreshTokenFn          func(ctx context.Context, refreshToken string) (*authDTO.RefreshResponse, error)
+	SwitchContextFn         func(ctx context.Context, userID, targetSchoolID string) (*authDTO.SwitchContextResponse, error)
+	GetAvailableContextsFn  func(ctx context.Context, userID string, currentContext *auth.UserContext) (*authDTO.AvailableContextsResponse, error)
 }
 
 func (m *MockAuthService) Login(ctx context.Context, email, password string) (*authDTO.LoginResponse, error) {
@@ -611,4 +615,95 @@ func (m *MockAuthService) RefreshToken(ctx context.Context, refreshToken string)
 		return m.RefreshTokenFn(ctx, refreshToken)
 	}
 	return nil, nil
+}
+
+func (m *MockAuthService) SwitchContext(ctx context.Context, userID, targetSchoolID string) (*authDTO.SwitchContextResponse, error) {
+	if m.SwitchContextFn != nil {
+		return m.SwitchContextFn(ctx, userID, targetSchoolID)
+	}
+	return nil, nil
+}
+
+func (m *MockAuthService) GetAvailableContexts(ctx context.Context, userID string, currentContext *auth.UserContext) (*authDTO.AvailableContextsResponse, error) {
+	if m.GetAvailableContextsFn != nil {
+		return m.GetAvailableContextsFn(ctx, userID, currentContext)
+	}
+	return nil, nil
+}
+
+// ---------------------------------------------------------------------------
+// MockUserService
+// ---------------------------------------------------------------------------
+
+type MockUserService struct {
+	CreateUserFn func(ctx context.Context, req dto.CreateUserRequest) (*dto.UserResponse, error)
+	GetUserFn    func(ctx context.Context, id string) (*dto.UserResponse, error)
+	ListUsersFn  func(ctx context.Context, filters repository.ListFilters) ([]*dto.UserResponse, error)
+	UpdateUserFn func(ctx context.Context, id string, req dto.UpdateUserRequest) (*dto.UserResponse, error)
+	DeleteUserFn func(ctx context.Context, id string) error
+}
+
+func (m *MockUserService) CreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.UserResponse, error) {
+	if m.CreateUserFn != nil {
+		return m.CreateUserFn(ctx, req)
+	}
+	return nil, nil
+}
+
+func (m *MockUserService) GetUser(ctx context.Context, id string) (*dto.UserResponse, error) {
+	if m.GetUserFn != nil {
+		return m.GetUserFn(ctx, id)
+	}
+	return nil, nil
+}
+
+func (m *MockUserService) ListUsers(ctx context.Context, filters repository.ListFilters) ([]*dto.UserResponse, error) {
+	if m.ListUsersFn != nil {
+		return m.ListUsersFn(ctx, filters)
+	}
+	return nil, nil
+}
+
+func (m *MockUserService) UpdateUser(ctx context.Context, id string, req dto.UpdateUserRequest) (*dto.UserResponse, error) {
+	if m.UpdateUserFn != nil {
+		return m.UpdateUserFn(ctx, id, req)
+	}
+	return nil, nil
+}
+
+func (m *MockUserService) DeleteUser(ctx context.Context, id string) error {
+	if m.DeleteUserFn != nil {
+		return m.DeleteUserFn(ctx, id)
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// MockStatsService
+// ---------------------------------------------------------------------------
+
+type MockStatsService struct {
+	GetGlobalStatsFn func(ctx context.Context) (*dto.GlobalStatsResponse, error)
+}
+
+func (m *MockStatsService) GetGlobalStats(ctx context.Context) (*dto.GlobalStatsResponse, error) {
+	if m.GetGlobalStatsFn != nil {
+		return m.GetGlobalStatsFn(ctx)
+	}
+	return nil, nil
+}
+
+// ---------------------------------------------------------------------------
+// MockMaterialService
+// ---------------------------------------------------------------------------
+
+type MockMaterialService struct {
+	DeleteMaterialFn func(ctx context.Context, id string) error
+}
+
+func (m *MockMaterialService) DeleteMaterial(ctx context.Context, id string) error {
+	if m.DeleteMaterialFn != nil {
+		return m.DeleteMaterialFn(ctx, id)
+	}
+	return nil
 }

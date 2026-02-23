@@ -2,81 +2,73 @@ package repository
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
+	"errors"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
-type postgresUserRepository struct{ db *sql.DB }
+type postgresUserRepository struct{ db *gorm.DB }
 
-func NewPostgresUserRepository(db *sql.DB) repository.UserRepository {
+func NewPostgresUserRepository(db *gorm.DB) repository.UserRepository {
 	return &postgresUserRepository{db: db}
 }
 
-const userCols = `id, email, password_hash, first_name, last_name, school_id, is_active, created_at, updated_at, deleted_at`
-
-func scanUser(row interface{ Scan(...interface{}) error }) (*entities.User, error) {
-	u := &entities.User{}
-	err := row.Scan(&u.ID, &u.Email, &u.PasswordHash, &u.FirstName, &u.LastName, &u.SchoolID, &u.IsActive, &u.CreatedAt, &u.UpdatedAt, &u.DeletedAt)
-	return u, err
+func (r *postgresUserRepository) Create(ctx context.Context, user *entities.User) error {
+	return r.db.WithContext(ctx).Create(user).Error
 }
 
 func (r *postgresUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.User, error) {
-	u, err := scanUser(r.db.QueryRowContext(ctx, `SELECT `+userCols+` FROM users WHERE id=$1 AND deleted_at IS NULL`, id))
-	if err == sql.ErrNoRows {
-		return nil, nil
+	var u entities.User
+	if err := r.db.WithContext(ctx).First(&u, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	return u, err
+	return &u, nil
 }
 
 func (r *postgresUserRepository) FindByEmail(ctx context.Context, email string) (*entities.User, error) {
-	u, err := scanUser(r.db.QueryRowContext(ctx, `SELECT `+userCols+` FROM users WHERE email=$1 AND deleted_at IS NULL`, email))
-	if err == sql.ErrNoRows {
-		return nil, nil
+	var u entities.User
+	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&u).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	return u, err
+	return &u, nil
+}
+
+func (r *postgresUserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&entities.User{}).Where("email = ?", email).Count(&count).Error
+	return count > 0, err
 }
 
 func (r *postgresUserRepository) Update(ctx context.Context, user *entities.User) error {
-	_, err := r.db.ExecContext(ctx, `UPDATE users SET first_name=$1, last_name=$2, is_active=$3, updated_at=$4 WHERE id=$5 AND deleted_at IS NULL`,
-		user.FirstName, user.LastName, user.IsActive, user.UpdatedAt, user.ID)
-	return err
+	return r.db.WithContext(ctx).Save(user).Error
+}
+
+func (r *postgresUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	return r.db.WithContext(ctx).Delete(&entities.User{}, "id = ?", id).Error
 }
 
 func (r *postgresUserRepository) List(ctx context.Context, filters repository.ListFilters) ([]*entities.User, error) {
-	query := `SELECT ` + userCols + ` FROM users WHERE deleted_at IS NULL`
-	args := []interface{}{}
-	argN := 1
+	query := r.db.WithContext(ctx).Model(&entities.User{})
 	if filters.IsActive != nil {
-		query += fmt.Sprintf(` AND is_active=$%d`, argN)
-		args = append(args, *filters.IsActive)
-		argN++
+		query = query.Where("is_active = ?", *filters.IsActive)
 	}
-	query += ` ORDER BY created_at DESC`
+	query = query.Order("created_at DESC")
 	if filters.Limit > 0 {
-		query += fmt.Sprintf(` LIMIT $%d`, argN)
-		args = append(args, filters.Limit)
-		argN++
+		query = query.Limit(filters.Limit)
 	}
 	if filters.Offset > 0 {
-		query += fmt.Sprintf(` OFFSET $%d`, argN)
-		args = append(args, filters.Offset)
+		query = query.Offset(filters.Offset)
 	}
-	rows, err := r.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 	var users []*entities.User
-	for rows.Next() {
-		u, err := scanUser(rows)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, u)
-	}
-	return users, rows.Err()
+	err := query.Find(&users).Error
+	return users, err
 }

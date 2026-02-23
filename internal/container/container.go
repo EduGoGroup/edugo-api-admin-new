@@ -1,8 +1,6 @@
 package container
 
 import (
-	"database/sql"
-
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
 	authHandler "github.com/EduGoGroup/edugo-api-admin-new/internal/auth/handler"
 	authService "github.com/EduGoGroup/edugo-api-admin-new/internal/auth/service"
@@ -11,11 +9,12 @@ import (
 	pgRepo "github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/persistence/postgres/repository"
 	"github.com/EduGoGroup/edugo-shared/auth"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	"gorm.io/gorm"
 )
 
 // Container is the dependency injection container
 type Container struct {
-	DB         *sql.DB
+	DB         *gorm.DB
 	Logger     logger.Logger
 	JWTManager *auth.JWTManager
 
@@ -36,10 +35,13 @@ type Container struct {
 	SubjectHandler      *handler.SubjectHandler
 	GuardianHandler     *handler.GuardianHandler
 	ScreenConfigHandler *handler.ScreenConfigHandler
+	UserHandler         *handler.UserHandler
+	StatsHandler        *handler.StatsHandler
+	MaterialHandler     *handler.MaterialHandler
 }
 
 // NewContainer creates a new container and initializes all dependencies
-func NewContainer(db *sql.DB, log logger.Logger, cfg *config.Config) *Container {
+func NewContainer(db *gorm.DB, log logger.Logger, cfg *config.Config) *Container {
 	c := &Container{
 		DB:         db,
 		Logger:     log,
@@ -60,10 +62,12 @@ func NewContainer(db *sql.DB, log logger.Logger, cfg *config.Config) *Container 
 	screenTemplateRepo := pgRepo.NewPostgresScreenTemplateRepository(db)
 	screenInstanceRepo := pgRepo.NewPostgresScreenInstanceRepository(db)
 	resourceScreenRepo := pgRepo.NewPostgresResourceScreenRepository(db)
+	statsRepo := pgRepo.NewPostgresStatsRepository(db)
+	materialRepo := pgRepo.NewPostgresMaterialRepository(db)
 
 	// Auth
 	c.TokenService = authService.NewTokenService(c.JWTManager, cfg.Auth.JWT.AccessTokenDuration, cfg.Auth.JWT.RefreshTokenDuration)
-	c.AuthService = authService.NewAuthService(userRepo, userRoleRepo, roleRepo, c.TokenService, log)
+	c.AuthService = authService.NewAuthService(userRepo, userRoleRepo, roleRepo, membershipRepo, schoolRepo, c.TokenService, log)
 	c.AuthHandler = authHandler.NewAuthHandler(c.AuthService, log)
 	c.VerifyHandler = authHandler.NewVerifyHandler(c.TokenService)
 
@@ -78,6 +82,9 @@ func NewContainer(db *sql.DB, log logger.Logger, cfg *config.Config) *Container 
 	subjectService := service.NewSubjectService(subjectRepo, log)
 	guardianService := service.NewGuardianService(guardianRepo, log)
 	screenConfigService := service.NewScreenConfigService(screenTemplateRepo, screenInstanceRepo, resourceScreenRepo, log)
+	userService := service.NewUserService(userRepo, log)
+	statsService := service.NewStatsService(statsRepo, log)
+	materialService := service.NewMaterialService(materialRepo, log)
 
 	// Handlers
 	c.SchoolHandler = handler.NewSchoolHandler(schoolService, log)
@@ -90,6 +97,9 @@ func NewContainer(db *sql.DB, log logger.Logger, cfg *config.Config) *Container 
 	c.SubjectHandler = handler.NewSubjectHandler(subjectService, log)
 	c.GuardianHandler = handler.NewGuardianHandler(guardianService, log)
 	c.ScreenConfigHandler = handler.NewScreenConfigHandler(screenConfigService, log)
+	c.UserHandler = handler.NewUserHandler(userService, log)
+	c.StatsHandler = handler.NewStatsHandler(statsService, log)
+	c.MaterialHandler = handler.NewMaterialHandler(materialService, log)
 
 	return c
 }
@@ -97,7 +107,11 @@ func NewContainer(db *sql.DB, log logger.Logger, cfg *config.Config) *Container 
 // Close releases container resources
 func (c *Container) Close() error {
 	if c.DB != nil {
-		return c.DB.Close()
+		sqlDB, err := c.DB.DB()
+		if err != nil {
+			return err
+		}
+		return sqlDB.Close()
 	}
 	return nil
 }

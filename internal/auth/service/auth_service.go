@@ -19,6 +19,8 @@ var (
 	ErrUserNotFound        = errors.New("user not found")
 	ErrUserInactive        = errors.New("user inactive")
 	ErrInvalidRefreshToken = errors.New("invalid refresh token")
+	ErrNoMembership        = errors.New("no active membership in target school")
+	ErrInvalidSchoolID     = errors.New("invalid school_id")
 )
 
 // AuthService defines the authentication service interface
@@ -26,14 +28,18 @@ type AuthService interface {
 	Login(ctx context.Context, email, password string) (*dto.LoginResponse, error)
 	Logout(ctx context.Context, accessToken string) error
 	RefreshToken(ctx context.Context, refreshToken string) (*dto.RefreshResponse, error)
+	SwitchContext(ctx context.Context, userID, targetSchoolID string) (*dto.SwitchContextResponse, error)
+	GetAvailableContexts(ctx context.Context, userID string, currentContext *auth.UserContext) (*dto.AvailableContextsResponse, error)
 }
 
 type authService struct {
-	userRepo     repository.UserRepository
-	userRoleRepo repository.UserRoleRepository
-	roleRepo     repository.RoleRepository
-	tokenService *TokenService
-	logger       logger.Logger
+	userRepo       repository.UserRepository
+	userRoleRepo   repository.UserRoleRepository
+	roleRepo       repository.RoleRepository
+	membershipRepo repository.MembershipRepository
+	schoolRepo     repository.SchoolRepository
+	tokenService   *TokenService
+	logger         logger.Logger
 }
 
 // NewAuthService creates a new auth service
@@ -41,15 +47,19 @@ func NewAuthService(
 	userRepo repository.UserRepository,
 	userRoleRepo repository.UserRoleRepository,
 	roleRepo repository.RoleRepository,
+	membershipRepo repository.MembershipRepository,
+	schoolRepo repository.SchoolRepository,
 	tokenService *TokenService,
 	logger logger.Logger,
 ) AuthService {
 	return &authService{
-		userRepo:     userRepo,
-		userRoleRepo: userRoleRepo,
-		roleRepo:     roleRepo,
-		tokenService: tokenService,
-		logger:       logger,
+		userRepo:       userRepo,
+		userRoleRepo:   userRoleRepo,
+		roleRepo:       roleRepo,
+		membershipRepo: membershipRepo,
+		schoolRepo:     schoolRepo,
+		tokenService:   tokenService,
+		logger:         logger,
 	}
 }
 
@@ -77,14 +87,11 @@ func (s *authService) Login(ctx context.Context, email, password string) (*dto.L
 		return nil, ErrInvalidCredentials
 	}
 
-	// 4. Get school_id
-	schoolID := ""
-	if user.SchoolID != nil {
-		schoolID = user.SchoolID.String()
-	}
+	// 4. Get user's active schools from memberships
+	schools, firstSchoolID := s.getUserSchools(ctx, user.ID)
 
-	// 5. Build RBAC context
-	activeContext := s.buildUserContext(ctx, user.ID, user.SchoolID)
+	// 5. Build RBAC context using the first active school
+	activeContext := s.buildUserContext(ctx, user.ID, firstSchoolID)
 	if activeContext == nil {
 		s.logger.Error("no RBAC context found for user", "user_id", user.ID.String(), "email", user.Email)
 		return nil, fmt.Errorf("user has no assigned roles")
@@ -96,7 +103,12 @@ func (s *authService) Login(ctx context.Context, email, password string) (*dto.L
 		return nil, fmt.Errorf("error generating tokens: %w", err)
 	}
 
-	// 7. Add user info
+	// 7. Build response
+	schoolID := ""
+	if firstSchoolID != nil {
+		schoolID = firstSchoolID.String()
+	}
+
 	tokenResponse.User = &dto.UserInfo{
 		ID:        user.ID.String(),
 		Email:     user.Email,
@@ -105,7 +117,7 @@ func (s *authService) Login(ctx context.Context, email, password string) (*dto.L
 		FullName:  user.FirstName + " " + user.LastName,
 		SchoolID:  schoolID,
 	}
-
+	tokenResponse.Schools = schools
 	tokenResponse.ActiveContext = &dto.UserContextDTO{
 		RoleID:      activeContext.RoleID,
 		RoleName:    activeContext.RoleName,
@@ -136,35 +148,243 @@ func (s *authService) Login(ctx context.Context, email, password string) (*dto.L
 
 // Logout invalidates the access token
 func (s *authService) Logout(_ context.Context, _ string) error {
-	// Token blacklisting requires Redis (not implemented in this clean API)
-	// For now, logout is a no-op on the server side; the client discards the token
 	s.logger.Info("user logged out", "entity_type", "auth_session")
 	return nil
 }
 
 // RefreshToken validates a refresh token and generates a new access token
 func (s *authService) RefreshToken(ctx context.Context, refreshToken string) (*dto.RefreshResponse, error) {
-	// Verify the refresh token by checking its hash
 	tokenHash := auth.HashToken(refreshToken)
 	if tokenHash == "" {
 		return nil, ErrInvalidRefreshToken
 	}
-
-	// Since refresh tokens are opaque (not JWT), we validate by attempting
-	// to extract user info from the stored token. In this clean implementation,
-	// refresh tokens are stateless secure random tokens.
-	// A production implementation would store refresh token hashes in the DB.
-	// For now, we validate the format and rely on the access token flow.
 	_ = tokenHash
-
-	// Without a refresh token store, we cannot validate refresh tokens properly.
-	// This is a known limitation that requires Redis or DB storage.
 	return nil, ErrInvalidRefreshToken
+}
+
+// getUserSchools devuelve las escuelas activas del usuario desde memberships.
+// Retorna el slice de SchoolInfo para el frontend y el UUID de la primera escuela (para el contexto RBAC).
+func (s *authService) getUserSchools(ctx context.Context, userID uuid.UUID) ([]dto.SchoolInfo, *uuid.UUID) {
+	memberships, err := s.membershipRepo.FindByUser(ctx, userID)
+	if err != nil {
+		s.logger.Warn("error fetching memberships for user", "user_id", userID.String(), "error", err)
+		return []dto.SchoolInfo{}, nil
+	}
+
+	// Deduplicate schools (un usuario puede tener varios memberships en la misma escuela)
+	seen := make(map[uuid.UUID]struct{})
+	var schools []dto.SchoolInfo
+	var firstSchoolID *uuid.UUID
+
+	for _, m := range memberships {
+		if !m.IsActive {
+			continue
+		}
+		if _, exists := seen[m.SchoolID]; exists {
+			continue
+		}
+		seen[m.SchoolID] = struct{}{}
+
+		school, err := s.schoolRepo.FindByID(ctx, m.SchoolID)
+		if err != nil || school == nil {
+			continue
+		}
+
+		sid := m.SchoolID
+		if firstSchoolID == nil {
+			firstSchoolID = &sid
+		}
+		schools = append(schools, dto.SchoolInfo{
+			ID:   m.SchoolID.String(),
+			Name: school.Name,
+		})
+	}
+
+	if schools == nil {
+		schools = []dto.SchoolInfo{}
+	}
+	return schools, firstSchoolID
+}
+
+// SwitchContext switches the active school context for the user
+func (s *authService) SwitchContext(ctx context.Context, userID, targetSchoolID string) (*dto.SwitchContextResponse, error) {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user_id: %w", err)
+	}
+
+	schoolUUID, err := uuid.Parse(targetSchoolID)
+	if err != nil {
+		return nil, ErrInvalidSchoolID
+	}
+
+	// Verify user exists and is active
+	user, err := s.userRepo.FindByID(ctx, userUUID)
+	if err != nil {
+		return nil, fmt.Errorf("error finding user: %w", err)
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+	if !user.IsActive {
+		return nil, ErrUserInactive
+	}
+
+	// Verify user has active membership in target school
+	membership, err := s.membershipRepo.FindByUserAndSchool(ctx, userUUID, schoolUUID)
+	if err != nil {
+		return nil, fmt.Errorf("error checking membership: %w", err)
+	}
+	if membership == nil {
+		s.logger.Warn("switch-context attempt without membership",
+			"user_id", userID,
+			"target_school_id", targetSchoolID,
+		)
+		return nil, ErrNoMembership
+	}
+
+	// Build RBAC context for target school
+	activeContext := s.buildUserContext(ctx, userUUID, &schoolUUID)
+	if activeContext == nil {
+		s.logger.Error("no RBAC context found for switch-context",
+			"user_id", userID,
+			"target_school_id", targetSchoolID,
+		)
+		return nil, fmt.Errorf("user has no assigned roles in target school")
+	}
+
+	// Generate new token pair with updated context
+	tokenResponse, err := s.tokenService.GenerateTokenPairWithContext(
+		user.ID.String(),
+		user.Email,
+		activeContext,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error generating tokens: %w", err)
+	}
+
+	s.logger.Info("context switched",
+		"entity_type", "auth_context",
+		"user_id", userID,
+		"new_school_id", targetSchoolID,
+		"new_role", activeContext.RoleName,
+	)
+
+	return &dto.SwitchContextResponse{
+		AccessToken:  tokenResponse.AccessToken,
+		RefreshToken: tokenResponse.RefreshToken,
+		ExpiresIn:    tokenResponse.ExpiresIn,
+		TokenType:    tokenResponse.TokenType,
+		Context: &dto.ContextInfo{
+			SchoolID: targetSchoolID,
+			Role:     activeContext.RoleName,
+			UserID:   userID,
+			Email:    user.Email,
+		},
+	}, nil
+}
+
+// GetAvailableContexts returns all available contexts (roles/schools) for the user
+func (s *authService) GetAvailableContexts(ctx context.Context, userID string, currentContext *auth.UserContext) (*dto.AvailableContextsResponse, error) {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user_id: %w", err)
+	}
+
+	// Get all user roles
+	userRoles, err := s.userRoleRepo.FindByUser(ctx, userUUID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching roles: %w", err)
+	}
+
+	// Cache to avoid repeated queries
+	roleCache := make(map[string]string)   // roleID -> roleName
+	schoolCache := make(map[string]string) // schoolID -> schoolName
+
+	var available []*dto.UserContextDTO
+	for _, ur := range userRoles {
+		roleID := ur.RoleID.String()
+
+		// Get role name (cached)
+		roleName, ok := roleCache[roleID]
+		if !ok {
+			role, err := s.roleRepo.FindByID(ctx, ur.RoleID)
+			if err != nil {
+				s.logger.Warn("error fetching role", "role_id", roleID, "error", err)
+				continue
+			}
+			if role == nil {
+				s.logger.Warn("role not found", "role_id", roleID)
+				continue
+			}
+			roleName = role.Name
+			roleCache[roleID] = roleName
+		}
+
+		// Get school name (cached)
+		schoolID := ""
+		schoolName := ""
+		if ur.SchoolID != nil {
+			schoolID = ur.SchoolID.String()
+			if cached, ok := schoolCache[schoolID]; ok {
+				schoolName = cached
+			} else {
+				school, err := s.schoolRepo.FindByID(ctx, *ur.SchoolID)
+				if err == nil && school != nil {
+					schoolName = school.Name
+					schoolCache[schoolID] = schoolName
+				}
+			}
+		}
+
+		// Get permissions for this context
+		permissions, err := s.userRoleRepo.GetUserPermissions(ctx, userUUID, ur.SchoolID, ur.AcademicUnitID)
+		if err != nil {
+			s.logger.Warn("error fetching user permissions", "user_id", userUUID.String(), "role_id", roleID, "error", err)
+		}
+
+		item := &dto.UserContextDTO{
+			RoleID:      roleID,
+			RoleName:    roleName,
+			SchoolID:    schoolID,
+			SchoolName:  schoolName,
+			Permissions: permissions,
+		}
+
+		if ur.AcademicUnitID != nil {
+			item.AcademicUnitID = ur.AcademicUnitID.String()
+		}
+
+		available = append(available, item)
+	}
+
+	// Build current context from JWT claims
+	var current *dto.UserContextDTO
+	if currentContext != nil {
+		current = &dto.UserContextDTO{
+			RoleID:           currentContext.RoleID,
+			RoleName:         currentContext.RoleName,
+			SchoolID:         currentContext.SchoolID,
+			SchoolName:       currentContext.SchoolName,
+			AcademicUnitID:   currentContext.AcademicUnitID,
+			AcademicUnitName: currentContext.AcademicUnitName,
+			Permissions:      currentContext.Permissions,
+		}
+	}
+
+	s.logger.Info("available contexts fetched",
+		"user_id", userID,
+		"contexts_count", len(available),
+	)
+
+	return &dto.AvailableContextsResponse{
+		Current:   current,
+		Available: available,
+	}, nil
 }
 
 // buildUserContext constructs the RBAC UserContext for the JWT
 func (s *authService) buildUserContext(ctx context.Context, userID uuid.UUID, schoolID *uuid.UUID) *auth.UserContext {
-	// Get user roles in this context
 	userRoles, err := s.userRoleRepo.FindByUserInContext(ctx, userID, schoolID, nil)
 	if err != nil {
 		s.logger.Warn("error obtaining user roles for RBAC context",
@@ -177,7 +397,6 @@ func (s *authService) buildUserContext(ctx context.Context, userID uuid.UUID, sc
 		return nil
 	}
 
-	// Use the first active role as the primary context
 	firstRole := userRoles[0]
 	role, err := s.roleRepo.FindByID(ctx, firstRole.RoleID)
 	if err != nil {
@@ -189,7 +408,6 @@ func (s *authService) buildUserContext(ctx context.Context, userID uuid.UUID, sc
 		return nil
 	}
 
-	// Get user permissions in this context
 	permissions, err := s.userRoleRepo.GetUserPermissions(ctx, userID, schoolID, nil)
 	if err != nil {
 		s.logger.Warn("error obtaining user permissions",

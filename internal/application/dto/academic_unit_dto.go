@@ -68,6 +68,11 @@ func ToAcademicUnitResponse(unit *entities.AcademicUnit) AcademicUnitResponse {
 		desc = *unit.Description
 	}
 
+	var deletedAt *time.Time
+	if unit.DeletedAt.Valid {
+		deletedAt = &unit.DeletedAt.Time
+	}
+
 	return AcademicUnitResponse{
 		ID:           unit.ID.String(),
 		ParentUnitID: parentID,
@@ -79,7 +84,7 @@ func ToAcademicUnitResponse(unit *entities.AcademicUnit) AcademicUnitResponse {
 		Metadata:     metadata,
 		CreatedAt:    unit.CreatedAt,
 		UpdatedAt:    unit.UpdatedAt,
-		DeletedAt:    unit.DeletedAt,
+		DeletedAt:    deletedAt,
 	}
 }
 

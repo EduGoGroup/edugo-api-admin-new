@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,10 +11,16 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 
+	"github.com/EduGoGroup/edugo-api-admin-new/docs"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/container"
+	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/handler"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/middleware"
 	"github.com/EduGoGroup/edugo-shared/common/types/enum"
 	"github.com/EduGoGroup/edugo-shared/logger"
@@ -35,6 +40,7 @@ var (
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
+// @description Type "Bearer" followed by a space and the JWT token. Example: "Bearer eyJhbGci..."
 func main() {
 	log.Printf("EduGo API Admin New starting... (Version: %s, Build: %s)", Version, BuildTime)
 
@@ -44,36 +50,48 @@ func main() {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
 
-	// 2. Connect to PostgreSQL
-	db, err := sql.Open("postgres", cfg.Database.Postgres.GetConnectionString())
-	if err != nil {
-		log.Fatalf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer db.Close()
+	// 2. Connect to PostgreSQL via GORM
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s search_path=auth,iam,academic,content,assessment,ui_config,public",
+		cfg.Database.Postgres.Host, cfg.Database.Postgres.Port, cfg.Database.Postgres.User,
+		cfg.Database.Postgres.Password, cfg.Database.Postgres.Database, cfg.Database.Postgres.SSLMode)
 
-	db.SetMaxOpenConns(cfg.Database.Postgres.MaxConnections)
-	db.SetMaxIdleConns(cfg.Database.Postgres.MaxConnections / 2)
-	db.SetConnMaxLifetime(time.Hour)
+	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: gormLogger.Default.LogMode(gormLogger.Info),
+	})
+	if err != nil {
+		log.Fatalf("Error connecting to PostgreSQL via GORM: %v", err)
+	}
+
+	sqlDB, err := gormDB.DB()
+	if err != nil {
+		log.Fatalf("Error getting underlying sql.DB: %v", err)
+	}
+
+	sqlDB.SetMaxOpenConns(cfg.Database.Postgres.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(cfg.Database.Postgres.MaxIdleConns)
+	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := db.PingContext(ctx); err != nil {
+	if err := sqlDB.PingContext(ctx); err != nil {
 		log.Fatalf("Error pinging PostgreSQL: %v", err)
 	}
-	log.Println("PostgreSQL connected successfully")
+	log.Println("PostgreSQL connected successfully via GORM")
 
 	// 3. Initialize logger (using standard log for now; in production use edugo-shared/logger)
 	// For a clean start, we use a simple logger adapter
 	appLogger := newSimpleLogger()
 
-	// 4. Validate JWT secret
-	if cfg.Auth.JWT.Secret == "" {
-		log.Fatalf("JWT_SECRET is not configured")
-	}
-
-	// 5. Create dependency container
-	c := container.NewContainer(db, appLogger, cfg)
+	// 4. Create dependency container
+	c := container.NewContainer(gormDB, appLogger, cfg)
 	defer func() { _ = c.Close() }()
+
+	// 5. Configure Swagger host dynamically from config
+	if cfg.Server.SwaggerHost != "" {
+		docs.SwaggerInfo.Host = cfg.Server.SwaggerHost
+	} else {
+		docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%d", cfg.Server.Port)
+	}
 
 	// 6. Configure Gin
 	r := gin.Default()
@@ -84,14 +102,18 @@ func main() {
 	// Error handler middleware
 	r.Use(middleware.ErrorHandler(appLogger))
 
-	// Health check
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "healthy", "service": "edugo-api-admin-new", "version": Version})
-	})
+	// Health check (root for infra probes + /api/v1 for Swagger)
+	healthHandler := handler.NewHealthHandler(gormDB, Version)
+	r.GET("/health", healthHandler.Health)
+
+	// Swagger UI
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// ==================== PUBLIC ROUTES ====================
 	v1Public := r.Group("/api/v1")
 	{
+		v1Public.GET("/health", healthHandler.Health)
+
 		authGroup := v1Public.Group("/auth")
 		{
 			authGroup.POST("/login", c.AuthHandler.Login)
@@ -106,6 +128,8 @@ func main() {
 	{
 		// Auth (protected)
 		v1.POST("/auth/logout", c.AuthHandler.Logout)
+		v1.POST("/auth/switch-context", c.AuthHandler.SwitchContext)
+		v1.GET("/auth/contexts", c.AuthHandler.GetAvailableContexts)
 
 		// Schools
 		schools := v1.Group("/schools")
@@ -148,13 +172,32 @@ func main() {
 			memberships.POST("/:id/expire", c.MembershipHandler.ExpireMembership)
 		}
 
-		// Users
+		// Users CRUD
 		users := v1.Group("/users")
 		{
+			users.POST("", ginmiddleware.RequirePermission(enum.PermissionUsersUpdate), c.UserHandler.CreateUser)
+			users.GET("", ginmiddleware.RequirePermission(enum.PermissionUsersRead), c.UserHandler.ListUsers)
+			users.GET("/:user_id", ginmiddleware.RequirePermission(enum.PermissionUsersRead), c.UserHandler.GetUser)
+			users.PATCH("/:user_id", ginmiddleware.RequirePermission(enum.PermissionUsersUpdate), c.UserHandler.UpdateUser)
+			users.DELETE("/:user_id", ginmiddleware.RequirePermission(enum.PermissionUsersUpdate), c.UserHandler.DeleteUser)
+
+			// User sub-resources
 			users.GET("/:user_id/memberships", c.MembershipHandler.ListMembershipsByUser)
 			users.GET("/:user_id/roles", ginmiddleware.RequirePermission(enum.PermissionUsersRead), c.RoleHandler.GetUserRoles)
 			users.POST("/:user_id/roles", ginmiddleware.RequirePermission(enum.PermissionUsersUpdate), c.RoleHandler.GrantRole)
 			users.DELETE("/:user_id/roles/:role_id", ginmiddleware.RequirePermission(enum.PermissionUsersUpdate), c.RoleHandler.RevokeRole)
+		}
+
+		// Stats
+		stats := v1.Group("/stats")
+		{
+			stats.GET("/global", ginmiddleware.RequirePermission(enum.PermissionPermissionsMgmtRead), c.StatsHandler.GetGlobalStats)
+		}
+
+		// Materials (admin moderation)
+		materials := v1.Group("/materials")
+		{
+			materials.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionPermissionsMgmtUpdate), c.MaterialHandler.DeleteMaterial)
 		}
 
 		// Menu

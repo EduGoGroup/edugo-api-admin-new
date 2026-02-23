@@ -22,7 +22,14 @@ func NewRoleHandler(roleService service.RoleService, logger logger.Logger) *Role
 // ListRoles godoc
 // @Summary List all roles
 // @Tags roles
-// @Router /v1/roles [get]
+// @Accept json
+// @Produce json
+// @Param scope query string false "Scope filter"
+// @Success 200 {array} dto.RoleDTO
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /roles [get]
 func (h *RoleHandler) ListRoles(c *gin.Context) {
 	scope := c.Query("scope")
 	roles, err := h.roleService.GetRoles(c.Request.Context(), scope)
@@ -36,7 +43,15 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 // GetRole godoc
 // @Summary Get a role by ID
 // @Tags roles
-// @Router /v1/roles/{id} [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "Role ID (UUID)"
+// @Success 200 {object} dto.RoleDTO
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /roles/{id} [get]
 func (h *RoleHandler) GetRole(c *gin.Context) {
 	id := c.Param("id")
 	role, err := h.roleService.GetRole(c.Request.Context(), id)
@@ -50,7 +65,15 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 // GetRolePermissions godoc
 // @Summary Get permissions for a role
 // @Tags roles
-// @Router /v1/roles/{id}/permissions [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "Role ID (UUID)"
+// @Success 200 {array} map[string]interface{}
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /roles/{id}/permissions [get]
 func (h *RoleHandler) GetRolePermissions(c *gin.Context) {
 	id := c.Param("id")
 	perms, err := h.roleService.GetRolePermissions(c.Request.Context(), id)
@@ -64,7 +87,14 @@ func (h *RoleHandler) GetRolePermissions(c *gin.Context) {
 // GetUserRoles godoc
 // @Summary Get roles assigned to a user
 // @Tags users
-// @Router /v1/users/{user_id}/roles [get]
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID (UUID)"
+// @Success 200 {array} dto.RoleDTO
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{user_id}/roles [get]
 func (h *RoleHandler) GetUserRoles(c *gin.Context) {
 	userID := c.Param("user_id")
 	roles, err := h.roleService.GetUserRoles(c.Request.Context(), userID)
@@ -78,7 +108,16 @@ func (h *RoleHandler) GetUserRoles(c *gin.Context) {
 // GrantRole godoc
 // @Summary Grant a role to a user
 // @Tags users
-// @Router /v1/users/{user_id}/roles [post]
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID (UUID)"
+// @Param request body dto.GrantRoleRequest true "Role grant data"
+// @Success 201 {object} dto.RoleDTO
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{user_id}/roles [post]
 func (h *RoleHandler) GrantRole(c *gin.Context) {
 	userID := c.Param("user_id")
 	var req dto.GrantRoleRequest
@@ -102,7 +141,16 @@ func (h *RoleHandler) GrantRole(c *gin.Context) {
 // RevokeRole godoc
 // @Summary Revoke a role from a user
 // @Tags users
-// @Router /v1/users/{user_id}/roles/{role_id} [delete]
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID (UUID)"
+// @Param role_id path string true "Role ID (UUID)"
+// @Success 204 "No content"
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{user_id}/roles/{role_id} [delete]
 func (h *RoleHandler) RevokeRole(c *gin.Context) {
 	userID := c.Param("user_id")
 	roleID := c.Param("role_id")

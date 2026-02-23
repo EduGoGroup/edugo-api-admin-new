@@ -22,7 +22,14 @@ func NewMenuHandler(menuService service.MenuService, logger logger.Logger) *Menu
 // GetUserMenu godoc
 // @Summary Get menu filtered by user permissions
 // @Tags menu
-// @Router /v1/menu [get]
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 403 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Security BearerAuth
+// @Router /menu [get]
 func (h *MenuHandler) GetUserMenu(c *gin.Context) {
 	claims, exists := c.Get("jwt_claims")
 	if !exists {
@@ -46,7 +53,13 @@ func (h *MenuHandler) GetUserMenu(c *gin.Context) {
 // GetFullMenu godoc
 // @Summary Get full menu (admin view)
 // @Tags menu
-// @Router /v1/menu/full [get]
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Security BearerAuth
+// @Router /menu/full [get]
 func (h *MenuHandler) GetFullMenu(c *gin.Context) {
 	menu, err := h.menuService.GetFullMenu(c.Request.Context())
 	if err != nil {

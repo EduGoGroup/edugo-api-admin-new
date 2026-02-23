@@ -24,7 +24,17 @@ func NewAcademicUnitHandler(unitService service.AcademicUnitService, logger logg
 // CreateUnit godoc
 // @Summary Create an academic unit under a school
 // @Tags academic-units
-// @Router /v1/schools/{id}/units [post]
+// @Accept json
+// @Produce json
+// @Param id path string true "School ID (UUID)"
+// @Param request body dto.CreateAcademicUnitRequest true "Academic unit data"
+// @Success 201 {object} dto.AcademicUnitResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools/{id}/units [post]
 func (h *AcademicUnitHandler) CreateUnit(c *gin.Context) {
 	schoolID := c.Param("id")
 	var req dto.CreateAcademicUnitRequest
@@ -43,7 +53,15 @@ func (h *AcademicUnitHandler) CreateUnit(c *gin.Context) {
 // ListUnitsBySchool godoc
 // @Summary List academic units by school
 // @Tags academic-units
-// @Router /v1/schools/{id}/units [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "School ID (UUID)"
+// @Success 200 {array} dto.AcademicUnitResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools/{id}/units [get]
 func (h *AcademicUnitHandler) ListUnitsBySchool(c *gin.Context) {
 	schoolID := c.Param("id")
 	units, err := h.unitService.ListUnitsBySchool(c.Request.Context(), schoolID)
@@ -57,7 +75,15 @@ func (h *AcademicUnitHandler) ListUnitsBySchool(c *gin.Context) {
 // GetUnitTree godoc
 // @Summary Get hierarchical unit tree for a school
 // @Tags academic-units
-// @Router /v1/schools/{id}/units/tree [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "School ID (UUID)"
+// @Success 200 {object} dto.AcademicUnitResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools/{id}/units/tree [get]
 func (h *AcademicUnitHandler) GetUnitTree(c *gin.Context) {
 	schoolID := c.Param("id")
 	tree, err := h.unitService.GetUnitTree(c.Request.Context(), schoolID)
@@ -71,7 +97,16 @@ func (h *AcademicUnitHandler) GetUnitTree(c *gin.Context) {
 // ListUnitsByType godoc
 // @Summary List academic units by type for a school
 // @Tags academic-units
-// @Router /v1/schools/{id}/units/by-type [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "School ID (UUID)"
+// @Param type query string false "Unit type filter"
+// @Success 200 {array} dto.AcademicUnitResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /schools/{id}/units/by-type [get]
 func (h *AcademicUnitHandler) ListUnitsByType(c *gin.Context) {
 	schoolID := c.Param("id")
 	unitType := c.Query("type")
@@ -86,7 +121,15 @@ func (h *AcademicUnitHandler) ListUnitsByType(c *gin.Context) {
 // GetUnit godoc
 // @Summary Get an academic unit by ID
 // @Tags academic-units
-// @Router /v1/units/{id} [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "Academic Unit ID (UUID)"
+// @Success 200 {object} dto.AcademicUnitResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /units/{id} [get]
 func (h *AcademicUnitHandler) GetUnit(c *gin.Context) {
 	id := c.Param("id")
 	unit, err := h.unitService.GetUnit(c.Request.Context(), id)
@@ -100,7 +143,17 @@ func (h *AcademicUnitHandler) GetUnit(c *gin.Context) {
 // UpdateUnit godoc
 // @Summary Update an academic unit
 // @Tags academic-units
-// @Router /v1/units/{id} [put]
+// @Accept json
+// @Produce json
+// @Param id path string true "Academic Unit ID (UUID)"
+// @Param request body dto.UpdateAcademicUnitRequest true "Academic unit update data"
+// @Success 200 {object} dto.AcademicUnitResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /units/{id} [put]
 func (h *AcademicUnitHandler) UpdateUnit(c *gin.Context) {
 	id := c.Param("id")
 	var req dto.UpdateAcademicUnitRequest
@@ -119,7 +172,16 @@ func (h *AcademicUnitHandler) UpdateUnit(c *gin.Context) {
 // DeleteUnit godoc
 // @Summary Soft delete an academic unit
 // @Tags academic-units
-// @Router /v1/units/{id} [delete]
+// @Accept json
+// @Produce json
+// @Param id path string true "Academic Unit ID (UUID)"
+// @Success 204 "No content"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /units/{id} [delete]
 func (h *AcademicUnitHandler) DeleteUnit(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.unitService.DeleteUnit(c.Request.Context(), id); err != nil {
@@ -132,7 +194,16 @@ func (h *AcademicUnitHandler) DeleteUnit(c *gin.Context) {
 // RestoreUnit godoc
 // @Summary Restore a soft-deleted academic unit
 // @Tags academic-units
-// @Router /v1/units/{id}/restore [post]
+// @Accept json
+// @Produce json
+// @Param id path string true "Academic Unit ID (UUID)"
+// @Success 200 {object} dto.AcademicUnitResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /units/{id}/restore [post]
 func (h *AcademicUnitHandler) RestoreUnit(c *gin.Context) {
 	id := c.Param("id")
 	unit, err := h.unitService.RestoreUnit(c.Request.Context(), id)
@@ -146,7 +217,15 @@ func (h *AcademicUnitHandler) RestoreUnit(c *gin.Context) {
 // GetHierarchyPath godoc
 // @Summary Get hierarchy path from root to unit
 // @Tags academic-units
-// @Router /v1/units/{id}/hierarchy-path [get]
+// @Accept json
+// @Produce json
+// @Param id path string true "Academic Unit ID (UUID)"
+// @Success 200 {array} dto.AcademicUnitResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /units/{id}/hierarchy-path [get]
 func (h *AcademicUnitHandler) GetHierarchyPath(c *gin.Context) {
 	id := c.Param("id")
 	path, err := h.unitService.GetHierarchyPath(c.Request.Context(), id)

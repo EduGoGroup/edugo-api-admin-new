@@ -18,6 +18,12 @@ type VerifyTokenRequest struct {
 	Token string `json:"token" binding:"required"`
 }
 
+// SchoolInfo contiene información básica de una escuela
+type SchoolInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // LoginResponse represents the login response
 type LoginResponse struct {
 	AccessToken   string          `json:"access_token"`
@@ -25,6 +31,7 @@ type LoginResponse struct {
 	ExpiresIn     int64           `json:"expires_in"`
 	TokenType     string          `json:"token_type"`
 	User          *UserInfo       `json:"user"`
+	Schools       []SchoolInfo    `json:"schools"`
 	ActiveContext *UserContextDTO `json:"active_context,omitempty"`
 }
 
@@ -57,10 +64,41 @@ type UserInfo struct {
 
 // UserContextDTO represents the active RBAC context
 type UserContextDTO struct {
-	RoleID      string   `json:"role_id"`
-	RoleName    string   `json:"role_name"`
-	SchoolID    string   `json:"school_id,omitempty"`
-	Permissions []string `json:"permissions"`
+	RoleID           string   `json:"role_id"`
+	RoleName         string   `json:"role_name"`
+	SchoolID         string   `json:"school_id,omitempty"`
+	SchoolName       string   `json:"school_name,omitempty"`
+	AcademicUnitID   string   `json:"academic_unit_id,omitempty"`
+	AcademicUnitName string   `json:"academic_unit_name,omitempty"`
+	Permissions      []string `json:"permissions"`
+}
+
+// SwitchContextRequest represents the request to switch school context
+type SwitchContextRequest struct {
+	SchoolID string `json:"school_id" binding:"required,uuid"`
+}
+
+// SwitchContextResponse represents the response after switching context
+type SwitchContextResponse struct {
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token"`
+	ExpiresIn    int64        `json:"expires_in"`
+	TokenType    string       `json:"token_type"`
+	Context      *ContextInfo `json:"context"`
+}
+
+// ContextInfo represents the current context info (school + role)
+type ContextInfo struct {
+	SchoolID string `json:"school_id"`
+	Role     string `json:"role"`
+	UserID   string `json:"user_id"`
+	Email    string `json:"email"`
+}
+
+// AvailableContextsResponse represents available contexts for a user
+type AvailableContextsResponse struct {
+	Current   *UserContextDTO   `json:"current"`
+	Available []*UserContextDTO `json:"available"`
 }
 
 // ErrorResponse represents an error response
