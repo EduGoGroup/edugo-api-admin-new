@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [0.1.0] - 2026-02-24
 
 
+## [0.1.1] - 2026-02-24
+
+### Tipo de Release: patch
+
+
+
+---
+
 ## [0.1.0] - 2026-02-24
 
 ### Tipo de Release: patch
