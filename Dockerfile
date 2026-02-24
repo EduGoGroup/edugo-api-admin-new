@@ -29,10 +29,9 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /root/
 
 COPY --from=builder /app/main /root/main
-COPY config/ /root/config/
 
 RUN chmod +x /root/main
 
-EXPOSE 8081
+EXPOSE 8080
 
 CMD ["./main"]
