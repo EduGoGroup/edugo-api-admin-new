@@ -100,7 +100,7 @@ jobs:
             --registry-server ${{ env.REGISTRY }} \
             --registry-username ${{ github.actor }} \
             --registry-password "${{ secrets.GHCR_TOKEN }}" \
-            --target-port 9091 \
+            --target-port 8080 \
             --ingress external \
             --min-replicas 0 \
             --max-replicas 2 \
@@ -109,21 +109,23 @@ jobs:
             --secrets \
               "db-postgres-password=${{ secrets.DATABASE_POSTGRES_PASSWORD }}" \
               "jwt-secret=${{ secrets.AUTH_JWT_SECRET }}" \
+              "iam-platform-url=${{ secrets.AUTH_API_IAM_PLATFORM_BASE_URL }}" \
             --env-vars \
               "APP_ENV=development" \
               "ENV=development" \
               "GIN_MODE=release" \
-              "SERVER_PORT=9091" \
+              "SERVER_PORT=8080" \
               "SERVER_HOST=0.0.0.0" \
-              "SERVER_READ_TIMEOUT=30s" \
-              "SERVER_WRITE_TIMEOUT=30s" \
-              "DATABASE_POSTGRES_HOST=ep-green-frost-ado4abbi-pooler.c-2.us-east-1.aws.neon.tech" \
-              "DATABASE_POSTGRES_PORT=5432" \
-              "DATABASE_POSTGRES_USER=neondb_owner" \
+              "SERVER_READ_TIMEOUT=15s" \
+              "SERVER_WRITE_TIMEOUT=15s" \
+              "DATABASE_POSTGRES_HOST=${{ secrets.DATABASE_POSTGRES_HOST }}" \
+              "DATABASE_POSTGRES_PORT=${{ secrets.DATABASE_POSTGRES_PORT }}" \
+              "DATABASE_POSTGRES_USER=${{ secrets.DATABASE_POSTGRES_USER }}" \
               "DATABASE_POSTGRES_PASSWORD=secretref:db-postgres-password" \
-              "DATABASE_POSTGRES_DATABASE=edugo" \
-              "DATABASE_POSTGRES_SSLMODE=require" \
-              "DATABASE_POSTGRES_MAX_CONNECTIONS=10" \
+              "DATABASE_POSTGRES_DATABASE=${{ secrets.DATABASE_POSTGRES_DATABASE }}" \
+              "DATABASE_POSTGRES_SSL_MODE=${{ secrets.DATABASE_POSTGRES_SSL_MODE }}" \
+              "DATABASE_POSTGRES_MAX_OPEN_CONNS=10" \
+              "AUTH_API_IAM_PLATFORM_BASE_URL=secretref:iam-platform-url" \
               "AUTH_JWT_SECRET=secretref:jwt-secret" \
               "LOGGING_LEVEL=info" \
               "LOGGING_FORMAT=json"
