@@ -159,10 +159,10 @@ func TestGuardianService_GetRelation(t *testing.T) {
 
 func TestGuardianService_DeleteRelation(t *testing.T) {
 	tests := []struct {
-		name    string
-		id      string
+		name      string
+		id        string
 		setupMock func(m *mock.MockGuardianRepository)
-		wantErr bool
+		wantErr   bool
 	}{
 		{
 			name: "success",
