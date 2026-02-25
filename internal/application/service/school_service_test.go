@@ -9,8 +9,8 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
 	"github.com/EduGoGroup/edugo-api-admin-new/test/mock"
-	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -242,10 +242,10 @@ func TestSchoolService_GetSchool(t *testing.T) {
 
 func TestSchoolService_ListSchools(t *testing.T) {
 	tests := []struct {
-		name        string
-		setupMock   func(m *mock.MockSchoolRepository)
-		wantErr     bool
-		wantCount   int
+		name      string
+		setupMock func(m *mock.MockSchoolRepository)
+		wantErr   bool
+		wantCount int
 	}{
 		{
 			name: "success - returns list",
@@ -323,10 +323,10 @@ func TestSchoolService_DeleteSchool(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:      "error - invalid UUID",
-			id:        "bad-id",
-			setupMock: func(_ *mock.MockSchoolRepository) {},
-			wantErr:   true,
+			name:        "error - invalid UUID",
+			id:          "bad-id",
+			setupMock:   func(_ *mock.MockSchoolRepository) {},
+			wantErr:     true,
 			errContains: "invalid school ID",
 		},
 		{
@@ -402,11 +402,11 @@ func TestSchoolService_UpdateSchool(t *testing.T) {
 			errContains: "name must be at least 3 characters",
 		},
 		{
-			name:      "error - invalid UUID",
-			id:        "bad-id",
-			request:   dto.UpdateSchoolRequest{Name: &newName},
-			setupMock: func(_ *mock.MockSchoolRepository) {},
-			wantErr:   true,
+			name:        "error - invalid UUID",
+			id:          "bad-id",
+			request:     dto.UpdateSchoolRequest{Name: &newName},
+			setupMock:   func(_ *mock.MockSchoolRepository) {},
+			wantErr:     true,
 			errContains: "invalid school ID",
 		},
 		{

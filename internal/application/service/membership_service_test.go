@@ -210,10 +210,10 @@ func TestMembershipService_DeleteMembership(t *testing.T) {
 	unitID := uuid.New()
 
 	tests := []struct {
-		name    string
-		id      string
+		name      string
+		id        string
 		setupMock func(m *mock.MockMembershipRepository)
-		wantErr bool
+		wantErr   bool
 	}{
 		{
 			name: "success",

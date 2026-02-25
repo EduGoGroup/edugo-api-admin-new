@@ -46,9 +46,9 @@ func (s *subjectService) CreateSubject(ctx context.Context, req dto.CreateSubjec
 
 	now := time.Now()
 	subject := &entities.Subject{
-		ID:       uuid.New(),
-		Name:     req.Name,
-		IsActive: true,
+		ID:        uuid.New(),
+		Name:      req.Name,
+		IsActive:  true,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

@@ -201,10 +201,10 @@ func TestSubjectService_DeleteSubject(t *testing.T) {
 	validID := uuid.New()
 
 	tests := []struct {
-		name    string
-		id      string
+		name      string
+		id        string
 		setupMock func(m *mock.MockSubjectRepository)
-		wantErr bool
+		wantErr   bool
 	}{
 		{
 			name: "success",

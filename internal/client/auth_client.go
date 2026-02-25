@@ -17,11 +17,11 @@ import (
 
 // TokenInfo contains the result of a token validation.
 type TokenInfo struct {
-	Valid         bool             `json:"valid"`
-	UserID        string           `json:"user_id,omitempty"`
-	Email         string           `json:"email,omitempty"`
-	ExpiresAt     time.Time        `json:"expires_at,omitempty"`
-	Error         string           `json:"error,omitempty"`
+	Valid         bool              `json:"valid"`
+	UserID        string            `json:"user_id,omitempty"`
+	Email         string            `json:"email,omitempty"`
+	ExpiresAt     time.Time         `json:"expires_at,omitempty"`
+	Error         string            `json:"error,omitempty"`
 	ActiveContext *auth.UserContext `json:"active_context,omitempty"`
 }
 
