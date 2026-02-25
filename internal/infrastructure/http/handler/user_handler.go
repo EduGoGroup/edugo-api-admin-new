@@ -8,8 +8,8 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
-	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 )
 
 // UserHandler handles user HTTP endpoints
