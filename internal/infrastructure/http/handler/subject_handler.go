@@ -2,12 +2,14 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 )
 
 type SubjectHandler struct {
@@ -50,13 +52,22 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 // @Tags subjects
 // @Accept json
 // @Produce json
+// @Param search query string false "Search term (ILIKE)"
+// @Param search_fields query string false "Comma-separated fields to search"
 // @Success 200 {array} dto.SubjectResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /subjects [get]
 func (h *SubjectHandler) ListSubjects(c *gin.Context) {
-	subjects, err := h.subjectService.ListSubjects(c.Request.Context())
+	var filters sharedrepo.ListFilters
+	if search := c.Query("search"); search != "" {
+		filters.Search = search
+		if fields := c.Query("search_fields"); fields != "" {
+			filters.SearchFields = strings.Split(fields, ",")
+		}
+	}
+	subjects, err := h.subjectService.ListSubjects(c.Request.Context(), filters)
 	if err != nil {
 		_ = c.Error(err)
 		return

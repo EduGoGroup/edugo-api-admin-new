@@ -18,6 +18,7 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/handler"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/middleware"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/test/mock"
 )
@@ -172,7 +173,7 @@ func TestSchoolHandler_ListSchools(t *testing.T) {
 		{
 			name: "success - returns 200",
 			setupMock: func(m *mock.MockSchoolService) {
-				m.ListSchoolsFn = func(_ context.Context) ([]dto.SchoolResponse, error) {
+				m.ListSchoolsFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]dto.SchoolResponse, error) {
 					return []dto.SchoolResponse{{ID: uuid.New().String(), Name: "School 1"}}, nil
 				}
 			},
@@ -181,7 +182,7 @@ func TestSchoolHandler_ListSchools(t *testing.T) {
 		{
 			name: "error - database error returns 500",
 			setupMock: func(m *mock.MockSchoolService) {
-				m.ListSchoolsFn = func(_ context.Context) ([]dto.SchoolResponse, error) {
+				m.ListSchoolsFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]dto.SchoolResponse, error) {
 					return nil, errors.NewDatabaseError("list", nil)
 				}
 			},

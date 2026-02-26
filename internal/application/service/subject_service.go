@@ -9,6 +9,7 @@ import (
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 )
 
@@ -16,7 +17,7 @@ import (
 type SubjectService interface {
 	CreateSubject(ctx context.Context, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error)
 	GetSubject(ctx context.Context, id string) (*dto.SubjectResponse, error)
-	ListSubjects(ctx context.Context) ([]dto.SubjectResponse, error)
+	ListSubjects(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error)
 	UpdateSubject(ctx context.Context, id string, req dto.UpdateSubjectRequest) (*dto.SubjectResponse, error)
 	DeleteSubject(ctx context.Context, id string) error
 }
@@ -84,8 +85,8 @@ func (s *subjectService) GetSubject(ctx context.Context, id string) (*dto.Subjec
 	return &response, nil
 }
 
-func (s *subjectService) ListSubjects(ctx context.Context) ([]dto.SubjectResponse, error) {
-	subjects, err := s.subjectRepo.List(ctx)
+func (s *subjectService) ListSubjects(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
+	subjects, err := s.subjectRepo.List(ctx, filters)
 	if err != nil {
 		return nil, errors.NewDatabaseError("list subjects", err)
 	}

@@ -786,6 +786,20 @@ const docTemplate = `{
                     "schools"
                 ],
                 "summary": "List all schools",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search term (ILIKE)",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated fields to search",
+                        "name": "search_fields",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1455,6 +1469,20 @@ const docTemplate = `{
                     "subjects"
                 ],
                 "summary": "List all subjects",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search term (ILIKE)",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated fields to search",
+                        "name": "search_fields",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2031,6 +2059,18 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Offset results",
                         "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term (ILIKE)",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated fields to search",
+                        "name": "search_fields",
                         "in": "query"
                     }
                 ],

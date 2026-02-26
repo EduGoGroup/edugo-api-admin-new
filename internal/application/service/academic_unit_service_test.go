@@ -9,6 +9,7 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
 	"github.com/EduGoGroup/edugo-api-admin-new/test/mock"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -243,7 +244,7 @@ func TestAcademicUnitService_ListUnitsBySchool(t *testing.T) {
 			name:     "success - returns units",
 			schoolID: schoolID.String(),
 			setupMock: func(m *mock.MockAcademicUnitRepository) {
-				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ bool) ([]*entities.AcademicUnit, error) {
+				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ bool, _ sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
 					return []*entities.AcademicUnit{
 						{ID: uuid.New(), SchoolID: schoolID, Name: "Unit 1"},
 					}, nil
@@ -268,7 +269,7 @@ func TestAcademicUnitService_ListUnitsBySchool(t *testing.T) {
 			}
 
 			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger())
-			result, err := svc.ListUnitsBySchool(context.Background(), tt.schoolID)
+			result, err := svc.ListUnitsBySchool(context.Background(), tt.schoolID, sharedrepo.ListFilters{})
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -296,7 +297,7 @@ func TestAcademicUnitService_ListUnitsByType(t *testing.T) {
 			schoolID: schoolID.String(),
 			unitType: "grade",
 			setupMock: func(m *mock.MockAcademicUnitRepository) {
-				m.FindByTypeFn = func(_ context.Context, _ uuid.UUID, _ string, _ bool) ([]*entities.AcademicUnit, error) {
+				m.FindByTypeFn = func(_ context.Context, _ uuid.UUID, _ string, _ bool, _ sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
 					return []*entities.AcademicUnit{}, nil
 				}
 			},
@@ -320,7 +321,7 @@ func TestAcademicUnitService_ListUnitsByType(t *testing.T) {
 			}
 
 			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger())
-			_, err := svc.ListUnitsByType(context.Background(), tt.schoolID, tt.unitType)
+			_, err := svc.ListUnitsByType(context.Background(), tt.schoolID, tt.unitType, sharedrepo.ListFilters{})
 
 			if tt.wantErr {
 				require.Error(t, err)
