@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [0.1.0] - 2026-02-24
 
 
+## [0.3.0] - 2026-02-26
+
+### Tipo de Release: patch
+
+- Add search and filter support to list endpoints and update dependencies
+
+---
+
 ## [0.2.0] - 2026-02-25
 
 ### Tipo de Release: patch
