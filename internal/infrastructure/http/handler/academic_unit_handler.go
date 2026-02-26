@@ -2,12 +2,14 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 )
 
 // AcademicUnitHandler handles academic unit HTTP endpoints
@@ -64,7 +66,14 @@ func (h *AcademicUnitHandler) CreateUnit(c *gin.Context) {
 // @Router /schools/{id}/units [get]
 func (h *AcademicUnitHandler) ListUnitsBySchool(c *gin.Context) {
 	schoolID := c.Param("id")
-	units, err := h.unitService.ListUnitsBySchool(c.Request.Context(), schoolID)
+	var filters sharedrepo.ListFilters
+	if search := c.Query("search"); search != "" {
+		filters.Search = search
+		if fields := c.Query("search_fields"); fields != "" {
+			filters.SearchFields = strings.Split(fields, ",")
+		}
+	}
+	units, err := h.unitService.ListUnitsBySchool(c.Request.Context(), schoolID, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -110,7 +119,14 @@ func (h *AcademicUnitHandler) GetUnitTree(c *gin.Context) {
 func (h *AcademicUnitHandler) ListUnitsByType(c *gin.Context) {
 	schoolID := c.Param("id")
 	unitType := c.Query("type")
-	units, err := h.unitService.ListUnitsByType(c.Request.Context(), schoolID, unitType)
+	var filters sharedrepo.ListFilters
+	if search := c.Query("search"); search != "" {
+		filters.Search = search
+		if fields := c.Query("search_fields"); fields != "" {
+			filters.SearchFields = strings.Split(fields, ",")
+		}
+	}
+	units, err := h.unitService.ListUnitsByType(c.Request.Context(), schoolID, unitType, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return

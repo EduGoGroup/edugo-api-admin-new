@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -58,6 +59,8 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Param is_active query bool false "Filter by active status"
 // @Param limit query int false "Limit results"
 // @Param offset query int false "Offset results"
+// @Param search query string false "Search term (ILIKE)"
+// @Param search_fields query string false "Comma-separated fields to search"
 // @Success 200 {array} dto.UserResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -89,6 +92,12 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 			return
 		}
 		filters.Offset = offset
+	}
+	if search := c.Query("search"); search != "" {
+		filters.Search = search
+		if fields := c.Query("search_fields"); fields != "" {
+			filters.SearchFields = strings.Split(fields, ",")
+		}
 	}
 
 	users, err := h.userService.ListUsers(c.Request.Context(), filters)

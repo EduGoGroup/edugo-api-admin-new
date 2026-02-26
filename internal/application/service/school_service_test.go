@@ -289,7 +289,7 @@ func TestSchoolService_ListSchools(t *testing.T) {
 			}
 
 			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults)
-			result, err := svc.ListSchools(context.Background())
+			result, err := svc.ListSchools(context.Background(), sharedrepo.ListFilters{})
 
 			if tt.wantErr {
 				require.Error(t, err)

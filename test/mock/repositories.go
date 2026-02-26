@@ -78,8 +78,8 @@ func (m *MockSchoolRepository) ExistsByCode(ctx context.Context, code string) (b
 type MockAcademicUnitRepository struct {
 	CreateFn                  func(ctx context.Context, unit *entities.AcademicUnit) error
 	FindByIDFn                func(ctx context.Context, id uuid.UUID, includeDeleted bool) (*entities.AcademicUnit, error)
-	FindBySchoolIDFn          func(ctx context.Context, schoolID uuid.UUID, includeDeleted bool) ([]*entities.AcademicUnit, error)
-	FindByTypeFn              func(ctx context.Context, schoolID uuid.UUID, unitType string, includeDeleted bool) ([]*entities.AcademicUnit, error)
+	FindBySchoolIDFn          func(ctx context.Context, schoolID uuid.UUID, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, error)
+	FindByTypeFn              func(ctx context.Context, schoolID uuid.UUID, unitType string, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, error)
 	UpdateFn                  func(ctx context.Context, unit *entities.AcademicUnit) error
 	SoftDeleteFn              func(ctx context.Context, id uuid.UUID) error
 	RestoreFn                 func(ctx context.Context, id uuid.UUID) error
@@ -101,16 +101,16 @@ func (m *MockAcademicUnitRepository) FindByID(ctx context.Context, id uuid.UUID,
 	return nil, nil
 }
 
-func (m *MockAcademicUnitRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, includeDeleted bool) ([]*entities.AcademicUnit, error) {
+func (m *MockAcademicUnitRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
 	if m.FindBySchoolIDFn != nil {
-		return m.FindBySchoolIDFn(ctx, schoolID, includeDeleted)
+		return m.FindBySchoolIDFn(ctx, schoolID, includeDeleted, filters)
 	}
 	return nil, nil
 }
 
-func (m *MockAcademicUnitRepository) FindByType(ctx context.Context, schoolID uuid.UUID, unitType string, includeDeleted bool) ([]*entities.AcademicUnit, error) {
+func (m *MockAcademicUnitRepository) FindByType(ctx context.Context, schoolID uuid.UUID, unitType string, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
 	if m.FindByTypeFn != nil {
-		return m.FindByTypeFn(ctx, schoolID, unitType, includeDeleted)
+		return m.FindByTypeFn(ctx, schoolID, unitType, includeDeleted, filters)
 	}
 	return nil, nil
 }
@@ -157,9 +157,9 @@ func (m *MockAcademicUnitRepository) ExistsBySchoolIDAndCode(ctx context.Context
 type MockMembershipRepository struct {
 	CreateFn              func(ctx context.Context, membership *entities.Membership) error
 	FindByIDFn            func(ctx context.Context, id uuid.UUID) (*entities.Membership, error)
-	FindByUserFn          func(ctx context.Context, userID uuid.UUID) ([]*entities.Membership, error)
-	FindByUnitFn          func(ctx context.Context, unitID uuid.UUID) ([]*entities.Membership, error)
-	FindByUnitAndRoleFn   func(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool) ([]*entities.Membership, error)
+	FindByUserFn          func(ctx context.Context, userID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, error)
+	FindByUnitFn          func(ctx context.Context, unitID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, error)
+	FindByUnitAndRoleFn   func(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool, filters sharedrepo.ListFilters) ([]*entities.Membership, error)
 	FindByUserAndSchoolFn func(ctx context.Context, userID, schoolID uuid.UUID) (*entities.Membership, error)
 	UpdateFn              func(ctx context.Context, membership *entities.Membership) error
 	DeleteFn              func(ctx context.Context, id uuid.UUID) error
@@ -179,23 +179,23 @@ func (m *MockMembershipRepository) FindByID(ctx context.Context, id uuid.UUID) (
 	return nil, nil
 }
 
-func (m *MockMembershipRepository) FindByUser(ctx context.Context, userID uuid.UUID) ([]*entities.Membership, error) {
+func (m *MockMembershipRepository) FindByUser(ctx context.Context, userID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, error) {
 	if m.FindByUserFn != nil {
-		return m.FindByUserFn(ctx, userID)
+		return m.FindByUserFn(ctx, userID, filters)
 	}
 	return nil, nil
 }
 
-func (m *MockMembershipRepository) FindByUnit(ctx context.Context, unitID uuid.UUID) ([]*entities.Membership, error) {
+func (m *MockMembershipRepository) FindByUnit(ctx context.Context, unitID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, error) {
 	if m.FindByUnitFn != nil {
-		return m.FindByUnitFn(ctx, unitID)
+		return m.FindByUnitFn(ctx, unitID, filters)
 	}
 	return nil, nil
 }
 
-func (m *MockMembershipRepository) FindByUnitAndRole(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool) ([]*entities.Membership, error) {
+func (m *MockMembershipRepository) FindByUnitAndRole(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool, filters sharedrepo.ListFilters) ([]*entities.Membership, error) {
 	if m.FindByUnitAndRoleFn != nil {
-		return m.FindByUnitAndRoleFn(ctx, unitID, role, activeOnly)
+		return m.FindByUnitAndRoleFn(ctx, unitID, role, activeOnly, filters)
 	}
 	return nil, nil
 }
@@ -230,7 +230,7 @@ type MockSubjectRepository struct {
 	FindByIDFn     func(ctx context.Context, id uuid.UUID) (*entities.Subject, error)
 	UpdateFn       func(ctx context.Context, subject *entities.Subject) error
 	DeleteFn       func(ctx context.Context, id uuid.UUID) error
-	ListFn         func(ctx context.Context) ([]*entities.Subject, error)
+	ListFn         func(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.Subject, error)
 	ExistsByNameFn func(ctx context.Context, name string) (bool, error)
 }
 
@@ -262,9 +262,9 @@ func (m *MockSubjectRepository) Delete(ctx context.Context, id uuid.UUID) error 
 	return nil
 }
 
-func (m *MockSubjectRepository) List(ctx context.Context) ([]*entities.Subject, error) {
+func (m *MockSubjectRepository) List(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.Subject, error) {
 	if m.ListFn != nil {
-		return m.ListFn(ctx)
+		return m.ListFn(ctx, filters)
 	}
 	return nil, nil
 }

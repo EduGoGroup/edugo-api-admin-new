@@ -9,6 +9,7 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
 	"github.com/EduGoGroup/edugo-api-admin-new/test/mock"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -156,7 +157,7 @@ func TestSubjectService_ListSubjects(t *testing.T) {
 		{
 			name: "success",
 			setupMock: func(m *mock.MockSubjectRepository) {
-				m.ListFn = func(_ context.Context) ([]*entities.Subject, error) {
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.Subject, error) {
 					return []*entities.Subject{
 						{ID: uuid.New(), Name: "Math"},
 						{ID: uuid.New(), Name: "Science"},
@@ -169,7 +170,7 @@ func TestSubjectService_ListSubjects(t *testing.T) {
 		{
 			name: "error - database error",
 			setupMock: func(m *mock.MockSubjectRepository) {
-				m.ListFn = func(_ context.Context) ([]*entities.Subject, error) {
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.Subject, error) {
 					return nil, fmt.Errorf("db error")
 				}
 			},
@@ -185,7 +186,7 @@ func TestSubjectService_ListSubjects(t *testing.T) {
 			}
 
 			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger())
-			result, err := svc.ListSubjects(context.Background())
+			result, err := svc.ListSubjects(context.Background(), sharedrepo.ListFilters{})
 
 			if tt.wantErr {
 				require.Error(t, err)
