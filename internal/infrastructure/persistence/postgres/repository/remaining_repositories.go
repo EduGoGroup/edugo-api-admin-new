@@ -7,6 +7,7 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -38,23 +39,27 @@ func (r *postgresAcademicUnitRepository) FindByID(ctx context.Context, id uuid.U
 	return &u, nil
 }
 
-func (r *postgresAcademicUnitRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, includeDeleted bool) ([]*entities.AcademicUnit, error) {
+func (r *postgresAcademicUnitRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
 	query := r.db.WithContext(ctx)
 	if includeDeleted {
 		query = query.Unscoped()
 	}
+	query = query.Where("school_id = ?", schoolID)
+	query = filters.ApplySearch(query)
 	var units []*entities.AcademicUnit
-	err := query.Where("school_id = ?", schoolID).Order("created_at").Find(&units).Error
+	err := query.Order("created_at").Find(&units).Error
 	return units, err
 }
 
-func (r *postgresAcademicUnitRepository) FindByType(ctx context.Context, schoolID uuid.UUID, unitType string, includeDeleted bool) ([]*entities.AcademicUnit, error) {
+func (r *postgresAcademicUnitRepository) FindByType(ctx context.Context, schoolID uuid.UUID, unitType string, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
 	query := r.db.WithContext(ctx)
 	if includeDeleted {
 		query = query.Unscoped()
 	}
+	query = query.Where("school_id = ? AND type = ?", schoolID, unitType)
+	query = filters.ApplySearch(query)
 	var units []*entities.AcademicUnit
-	err := query.Where("school_id = ? AND type = ?", schoolID, unitType).Find(&units).Error
+	err := query.Find(&units).Error
 	return units, err
 }
 
@@ -131,9 +136,12 @@ func (r *postgresSubjectRepository) Delete(ctx context.Context, id uuid.UUID) er
 		Updates(map[string]interface{}{"is_active": false, "updated_at": time.Now()}).Error
 }
 
-func (r *postgresSubjectRepository) List(ctx context.Context) ([]*entities.Subject, error) {
+func (r *postgresSubjectRepository) List(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.Subject, error) {
+	query := r.db.WithContext(ctx).Where("is_active = true")
+	query = filters.ApplySearch(query)
+	query = query.Order("name")
 	var subjects []*entities.Subject
-	err := r.db.WithContext(ctx).Where("is_active = true").Order("name").Find(&subjects).Error
+	err := query.Find(&subjects).Error
 	return subjects, err
 }
 

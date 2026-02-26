@@ -2,12 +2,14 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 )
 
 type MembershipHandler struct {
@@ -63,7 +65,14 @@ func (h *MembershipHandler) ListMembershipsByUnit(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "unit_id query parameter is required", Code: "INVALID_REQUEST"})
 		return
 	}
-	memberships, err := h.membershipService.ListMembershipsByUnit(c.Request.Context(), unitID)
+	var filters sharedrepo.ListFilters
+	if search := c.Query("search"); search != "" {
+		filters.Search = search
+		if fields := c.Query("search_fields"); fields != "" {
+			filters.SearchFields = strings.Split(fields, ",")
+		}
+	}
+	memberships, err := h.membershipService.ListMembershipsByUnit(c.Request.Context(), unitID, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -91,7 +100,14 @@ func (h *MembershipHandler) ListMembershipsByRole(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "unit_id and role query parameters are required", Code: "INVALID_REQUEST"})
 		return
 	}
-	memberships, err := h.membershipService.ListMembershipsByRole(c.Request.Context(), unitID, role)
+	var filters sharedrepo.ListFilters
+	if search := c.Query("search"); search != "" {
+		filters.Search = search
+		if fields := c.Query("search_fields"); fields != "" {
+			filters.SearchFields = strings.Split(fields, ",")
+		}
+	}
+	memberships, err := h.membershipService.ListMembershipsByRole(c.Request.Context(), unitID, role, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -206,7 +222,14 @@ func (h *MembershipHandler) ExpireMembership(c *gin.Context) {
 // @Router /users/{user_id}/memberships [get]
 func (h *MembershipHandler) ListMembershipsByUser(c *gin.Context) {
 	userID := c.Param("user_id")
-	memberships, err := h.membershipService.ListMembershipsByUser(c.Request.Context(), userID)
+	var filters sharedrepo.ListFilters
+	if search := c.Query("search"); search != "" {
+		filters.Search = search
+		if fields := c.Query("search_fields"); fields != "" {
+			filters.SearchFields = strings.Split(fields, ",")
+		}
+	}
+	memberships, err := h.membershipService.ListMembershipsByUser(c.Request.Context(), userID, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return

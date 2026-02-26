@@ -14,6 +14,7 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/handler"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/test/mock"
 )
@@ -133,7 +134,7 @@ func TestSubjectHandler_ListSubjects(t *testing.T) {
 		{
 			name: "success",
 			setupMock: func(m *mock.MockSubjectService) {
-				m.ListSubjectsFn = func(_ context.Context) ([]dto.SubjectResponse, error) {
+				m.ListSubjectsFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
 					return []dto.SubjectResponse{}, nil
 				}
 			},

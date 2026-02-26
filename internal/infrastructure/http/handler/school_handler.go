@@ -2,12 +2,14 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
 	"github.com/EduGoGroup/edugo-shared/logger"
+	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 )
 
 // SchoolHandler handles school HTTP endpoints
@@ -106,13 +108,22 @@ func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 // @Tags schools
 // @Accept json
 // @Produce json
+// @Param search query string false "Search term (ILIKE)"
+// @Param search_fields query string false "Comma-separated fields to search"
 // @Success 200 {array} dto.SchoolResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /schools [get]
 func (h *SchoolHandler) ListSchools(c *gin.Context) {
-	schools, err := h.schoolService.ListSchools(c.Request.Context())
+	var filters sharedrepo.ListFilters
+	if search := c.Query("search"); search != "" {
+		filters.Search = search
+		if fields := c.Query("search_fields"); fields != "" {
+			filters.SearchFields = strings.Split(fields, ",")
+		}
+	}
+	schools, err := h.schoolService.ListSchools(c.Request.Context(), filters)
 	if err != nil {
 		_ = c.Error(err)
 		return

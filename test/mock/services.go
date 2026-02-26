@@ -16,7 +16,7 @@ type MockSchoolService struct {
 	GetSchoolFn       func(ctx context.Context, id string) (*dto.SchoolResponse, error)
 	GetSchoolByCodeFn func(ctx context.Context, code string) (*dto.SchoolResponse, error)
 	UpdateSchoolFn    func(ctx context.Context, id string, req dto.UpdateSchoolRequest) (*dto.SchoolResponse, error)
-	ListSchoolsFn     func(ctx context.Context) ([]dto.SchoolResponse, error)
+	ListSchoolsFn     func(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SchoolResponse, error)
 	DeleteSchoolFn    func(ctx context.Context, id string) error
 }
 
@@ -48,9 +48,9 @@ func (m *MockSchoolService) UpdateSchool(ctx context.Context, id string, req dto
 	return nil, nil
 }
 
-func (m *MockSchoolService) ListSchools(ctx context.Context) ([]dto.SchoolResponse, error) {
+func (m *MockSchoolService) ListSchools(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SchoolResponse, error) {
 	if m.ListSchoolsFn != nil {
-		return m.ListSchoolsFn(ctx)
+		return m.ListSchoolsFn(ctx, filters)
 	}
 	return nil, nil
 }
@@ -69,9 +69,9 @@ func (m *MockSchoolService) DeleteSchool(ctx context.Context, id string) error {
 type MockAcademicUnitService struct {
 	CreateUnitFn        func(ctx context.Context, schoolID string, req dto.CreateAcademicUnitRequest) (*dto.AcademicUnitResponse, error)
 	GetUnitFn           func(ctx context.Context, id string) (*dto.AcademicUnitResponse, error)
-	ListUnitsBySchoolFn func(ctx context.Context, schoolID string) ([]dto.AcademicUnitResponse, error)
+	ListUnitsBySchoolFn func(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, error)
 	GetUnitTreeFn       func(ctx context.Context, schoolID string) ([]*dto.UnitTreeNode, error)
-	ListUnitsByTypeFn   func(ctx context.Context, schoolID, unitType string) ([]dto.AcademicUnitResponse, error)
+	ListUnitsByTypeFn   func(ctx context.Context, schoolID, unitType string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, error)
 	UpdateUnitFn        func(ctx context.Context, id string, req dto.UpdateAcademicUnitRequest) (*dto.AcademicUnitResponse, error)
 	DeleteUnitFn        func(ctx context.Context, id string) error
 	RestoreUnitFn       func(ctx context.Context, id string) (*dto.AcademicUnitResponse, error)
@@ -92,9 +92,9 @@ func (m *MockAcademicUnitService) GetUnit(ctx context.Context, id string) (*dto.
 	return nil, nil
 }
 
-func (m *MockAcademicUnitService) ListUnitsBySchool(ctx context.Context, schoolID string) ([]dto.AcademicUnitResponse, error) {
+func (m *MockAcademicUnitService) ListUnitsBySchool(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, error) {
 	if m.ListUnitsBySchoolFn != nil {
-		return m.ListUnitsBySchoolFn(ctx, schoolID)
+		return m.ListUnitsBySchoolFn(ctx, schoolID, filters)
 	}
 	return nil, nil
 }
@@ -106,9 +106,9 @@ func (m *MockAcademicUnitService) GetUnitTree(ctx context.Context, schoolID stri
 	return nil, nil
 }
 
-func (m *MockAcademicUnitService) ListUnitsByType(ctx context.Context, schoolID, unitType string) ([]dto.AcademicUnitResponse, error) {
+func (m *MockAcademicUnitService) ListUnitsByType(ctx context.Context, schoolID, unitType string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, error) {
 	if m.ListUnitsByTypeFn != nil {
-		return m.ListUnitsByTypeFn(ctx, schoolID, unitType)
+		return m.ListUnitsByTypeFn(ctx, schoolID, unitType, filters)
 	}
 	return nil, nil
 }
@@ -148,9 +148,9 @@ func (m *MockAcademicUnitService) GetHierarchyPath(ctx context.Context, id strin
 type MockMembershipService struct {
 	CreateMembershipFn      func(ctx context.Context, req dto.CreateMembershipRequest) (*dto.MembershipResponse, error)
 	GetMembershipFn         func(ctx context.Context, id string) (*dto.MembershipResponse, error)
-	ListMembershipsByUnitFn func(ctx context.Context, unitID string) ([]dto.MembershipResponse, error)
-	ListMembershipsByRoleFn func(ctx context.Context, unitID, role string) ([]dto.MembershipResponse, error)
-	ListMembershipsByUserFn func(ctx context.Context, userID string) ([]dto.MembershipResponse, error)
+	ListMembershipsByUnitFn func(ctx context.Context, unitID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error)
+	ListMembershipsByRoleFn func(ctx context.Context, unitID, role string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error)
+	ListMembershipsByUserFn func(ctx context.Context, userID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error)
 	UpdateMembershipFn      func(ctx context.Context, id string, req dto.UpdateMembershipRequest) (*dto.MembershipResponse, error)
 	DeleteMembershipFn      func(ctx context.Context, id string) error
 	ExpireMembershipFn      func(ctx context.Context, id string) (*dto.MembershipResponse, error)
@@ -170,23 +170,23 @@ func (m *MockMembershipService) GetMembership(ctx context.Context, id string) (*
 	return nil, nil
 }
 
-func (m *MockMembershipService) ListMembershipsByUnit(ctx context.Context, unitID string) ([]dto.MembershipResponse, error) {
+func (m *MockMembershipService) ListMembershipsByUnit(ctx context.Context, unitID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error) {
 	if m.ListMembershipsByUnitFn != nil {
-		return m.ListMembershipsByUnitFn(ctx, unitID)
+		return m.ListMembershipsByUnitFn(ctx, unitID, filters)
 	}
 	return nil, nil
 }
 
-func (m *MockMembershipService) ListMembershipsByRole(ctx context.Context, unitID, role string) ([]dto.MembershipResponse, error) {
+func (m *MockMembershipService) ListMembershipsByRole(ctx context.Context, unitID, role string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error) {
 	if m.ListMembershipsByRoleFn != nil {
-		return m.ListMembershipsByRoleFn(ctx, unitID, role)
+		return m.ListMembershipsByRoleFn(ctx, unitID, role, filters)
 	}
 	return nil, nil
 }
 
-func (m *MockMembershipService) ListMembershipsByUser(ctx context.Context, userID string) ([]dto.MembershipResponse, error) {
+func (m *MockMembershipService) ListMembershipsByUser(ctx context.Context, userID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error) {
 	if m.ListMembershipsByUserFn != nil {
-		return m.ListMembershipsByUserFn(ctx, userID)
+		return m.ListMembershipsByUserFn(ctx, userID, filters)
 	}
 	return nil, nil
 }
@@ -219,7 +219,7 @@ func (m *MockMembershipService) ExpireMembership(ctx context.Context, id string)
 type MockSubjectService struct {
 	CreateSubjectFn func(ctx context.Context, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error)
 	GetSubjectFn    func(ctx context.Context, id string) (*dto.SubjectResponse, error)
-	ListSubjectsFn  func(ctx context.Context) ([]dto.SubjectResponse, error)
+	ListSubjectsFn  func(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error)
 	UpdateSubjectFn func(ctx context.Context, id string, req dto.UpdateSubjectRequest) (*dto.SubjectResponse, error)
 	DeleteSubjectFn func(ctx context.Context, id string) error
 }
@@ -238,9 +238,9 @@ func (m *MockSubjectService) GetSubject(ctx context.Context, id string) (*dto.Su
 	return nil, nil
 }
 
-func (m *MockSubjectService) ListSubjects(ctx context.Context) ([]dto.SubjectResponse, error) {
+func (m *MockSubjectService) ListSubjects(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
 	if m.ListSubjectsFn != nil {
-		return m.ListSubjectsFn(ctx)
+		return m.ListSubjectsFn(ctx, filters)
 	}
 	return nil, nil
 }
