@@ -54,7 +54,11 @@ func (s *guardianService) CreateRelation(ctx context.Context, req dto.CreateGuar
 	}
 
 	var createdByUUID *uuid.UUID
-	if parsed, err := uuid.Parse(createdBy); err == nil {
+	if createdBy != "" {
+		parsed, err := uuid.Parse(createdBy)
+		if err != nil {
+			return nil, errors.NewValidationError("invalid created_by")
+		}
 		createdByUUID = &parsed
 	}
 
