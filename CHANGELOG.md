@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 ## [0.1.0] - 2026-02-24
 
 
+## [0.5.0] - 2026-03-02
+
+### Tipo de Release: patch
+
+- fix: validar createdBy como UUID e incluir tests de cobertura
+- Update subject API docs and dependencies
+- chore: actualizar edugo-infrastructure/postgres a v0.57.0
+- fix: corregir tipo CreatedBy en GuardianRelation DTO y service
+
+---
+
 ## [0.4.0] - 2026-03-02
 
 ### Tipo de Release: patch
