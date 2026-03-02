@@ -27,14 +27,40 @@ func TestGuardianService_CreateRelation(t *testing.T) {
 		errContains string
 	}{
 		{
-			name:      "success",
+			name:      "success - with valid createdBy",
 			request:   dto.CreateGuardianRelationRequest{GuardianID: guardianID, StudentID: studentID, RelationshipType: "father"},
 			createdBy: uuid.New().String(),
 			setupMock: func(m *mock.MockGuardianRepository) {
 				m.ExistsActiveRelationFn = func(_ context.Context, _, _ uuid.UUID) (bool, error) { return false, nil }
-				m.CreateFn = func(_ context.Context, _ *entities.GuardianRelation) error { return nil }
+				m.CreateFn = func(_ context.Context, r *entities.GuardianRelation) error {
+					assert.NotNil(t, r.CreatedBy, "CreatedBy debe ser un UUID no nil cuando se pasa un UUID válido")
+					return nil
+				}
 			},
 			wantErr: false,
+		},
+		{
+			name:      "success - with empty createdBy",
+			request:   dto.CreateGuardianRelationRequest{GuardianID: guardianID, StudentID: studentID, RelationshipType: "father"},
+			createdBy: "",
+			setupMock: func(m *mock.MockGuardianRepository) {
+				m.ExistsActiveRelationFn = func(_ context.Context, _, _ uuid.UUID) (bool, error) { return false, nil }
+				m.CreateFn = func(_ context.Context, r *entities.GuardianRelation) error {
+					assert.Nil(t, r.CreatedBy, "CreatedBy debe ser nil cuando createdBy es string vacío")
+					return nil
+				}
+			},
+			wantErr: false,
+		},
+		{
+			name:        "error - invalid createdBy (not a UUID)",
+			request:     dto.CreateGuardianRelationRequest{GuardianID: guardianID, StudentID: studentID, RelationshipType: "father"},
+			createdBy:   "not-a-uuid",
+			setupMock:   func(m *mock.MockGuardianRepository) {
+				m.ExistsActiveRelationFn = func(_ context.Context, _, _ uuid.UUID) (bool, error) { return false, nil }
+			},
+			wantErr:     true,
+			errContains: "invalid created_by",
 		},
 		{
 			name:        "error - invalid guardian_id",
