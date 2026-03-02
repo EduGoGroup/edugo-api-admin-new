@@ -16,24 +16,29 @@ import (
 )
 
 func TestSubjectService_CreateSubject(t *testing.T) {
+	testSchoolID := uuid.New().String()
+
 	tests := []struct {
 		name        string
+		schoolID    string
 		request     dto.CreateSubjectRequest
 		setupMock   func(m *mock.MockSubjectRepository)
 		wantErr     bool
 		errContains string
 	}{
 		{
-			name:    "success",
-			request: dto.CreateSubjectRequest{Name: "Mathematics", Description: "Math subject"},
+			name:     "success",
+			schoolID: testSchoolID,
+			request:  dto.CreateSubjectRequest{Name: "Mathematics", Description: "Math subject"},
 			setupMock: func(m *mock.MockSubjectRepository) {
-				m.ExistsByNameFn = func(_ context.Context, _ string) (bool, error) { return false, nil }
+				m.ExistsBySchoolIDAndNameFn = func(_ context.Context, _ uuid.UUID, _ string) (bool, error) { return false, nil }
 				m.CreateFn = func(_ context.Context, _ *entities.Subject) error { return nil }
 			},
 			wantErr: false,
 		},
 		{
 			name:        "error - name too short",
+			schoolID:    testSchoolID,
 			request:     dto.CreateSubjectRequest{Name: "M"},
 			setupMock:   func(_ *mock.MockSubjectRepository) {},
 			wantErr:     true,
@@ -41,28 +46,39 @@ func TestSubjectService_CreateSubject(t *testing.T) {
 		},
 		{
 			name:        "error - empty name",
+			schoolID:    testSchoolID,
 			request:     dto.CreateSubjectRequest{Name: ""},
 			setupMock:   func(_ *mock.MockSubjectRepository) {},
 			wantErr:     true,
 			errContains: "name must be at least 2 characters",
 		},
 		{
-			name:    "error - duplicate name",
-			request: dto.CreateSubjectRequest{Name: "Mathematics"},
+			name:     "error - duplicate name",
+			schoolID: testSchoolID,
+			request:  dto.CreateSubjectRequest{Name: "Mathematics"},
 			setupMock: func(m *mock.MockSubjectRepository) {
-				m.ExistsByNameFn = func(_ context.Context, _ string) (bool, error) { return true, nil }
+				m.ExistsBySchoolIDAndNameFn = func(_ context.Context, _ uuid.UUID, _ string) (bool, error) { return true, nil }
 			},
 			wantErr:     true,
 			errContains: "already exists",
 		},
 		{
-			name:    "error - database error on create",
-			request: dto.CreateSubjectRequest{Name: "Physics"},
+			name:     "error - database error on create",
+			schoolID: testSchoolID,
+			request:  dto.CreateSubjectRequest{Name: "Physics"},
 			setupMock: func(m *mock.MockSubjectRepository) {
-				m.ExistsByNameFn = func(_ context.Context, _ string) (bool, error) { return false, nil }
+				m.ExistsBySchoolIDAndNameFn = func(_ context.Context, _ uuid.UUID, _ string) (bool, error) { return false, nil }
 				m.CreateFn = func(_ context.Context, _ *entities.Subject) error { return fmt.Errorf("db error") }
 			},
 			wantErr: true,
+		},
+		{
+			name:        "error - invalid school ID",
+			schoolID:    "bad-uuid",
+			request:     dto.CreateSubjectRequest{Name: "Physics"},
+			setupMock:   func(_ *mock.MockSubjectRepository) {},
+			wantErr:     true,
+			errContains: "invalid school ID",
 		},
 	}
 
@@ -74,7 +90,7 @@ func TestSubjectService_CreateSubject(t *testing.T) {
 			}
 
 			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger())
-			result, err := svc.CreateSubject(context.Background(), tt.request)
+			result, err := svc.CreateSubject(context.Background(), tt.schoolID, tt.request)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -148,16 +164,20 @@ func TestSubjectService_GetSubject(t *testing.T) {
 }
 
 func TestSubjectService_ListSubjects(t *testing.T) {
+	testSchoolID := uuid.New().String()
+
 	tests := []struct {
 		name      string
+		schoolID  string
 		setupMock func(m *mock.MockSubjectRepository)
 		wantErr   bool
 		wantCount int
 	}{
 		{
-			name: "success",
+			name:     "success",
+			schoolID: testSchoolID,
 			setupMock: func(m *mock.MockSubjectRepository) {
-				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.Subject, error) {
+				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ sharedrepo.ListFilters) ([]*entities.Subject, error) {
 					return []*entities.Subject{
 						{ID: uuid.New(), Name: "Math"},
 						{ID: uuid.New(), Name: "Science"},
@@ -168,13 +188,20 @@ func TestSubjectService_ListSubjects(t *testing.T) {
 			wantCount: 2,
 		},
 		{
-			name: "error - database error",
+			name:     "error - database error",
+			schoolID: testSchoolID,
 			setupMock: func(m *mock.MockSubjectRepository) {
-				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.Subject, error) {
+				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ sharedrepo.ListFilters) ([]*entities.Subject, error) {
 					return nil, fmt.Errorf("db error")
 				}
 			},
 			wantErr: true,
+		},
+		{
+			name:      "error - invalid school ID",
+			schoolID:  "bad-uuid",
+			setupMock: func(_ *mock.MockSubjectRepository) {},
+			wantErr:   true,
 		},
 	}
 
@@ -186,7 +213,7 @@ func TestSubjectService_ListSubjects(t *testing.T) {
 			}
 
 			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger())
-			result, err := svc.ListSubjects(context.Background(), sharedrepo.ListFilters{})
+			result, err := svc.ListSubjects(context.Background(), tt.schoolID, sharedrepo.ListFilters{})
 
 			if tt.wantErr {
 				require.Error(t, err)
