@@ -127,6 +127,15 @@ func (r *postgresSubjectRepository) FindByID(ctx context.Context, id uuid.UUID) 
 	return &s, nil
 }
 
+func (r *postgresSubjectRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Subject, error) {
+	query := r.db.WithContext(ctx).Where("school_id = ? AND is_active = true", schoolID)
+	query = filters.ApplySearch(query)
+	query = query.Order("name")
+	var subjects []*entities.Subject
+	err := query.Find(&subjects).Error
+	return subjects, err
+}
+
 func (r *postgresSubjectRepository) Update(ctx context.Context, s *entities.Subject) error {
 	return r.db.WithContext(ctx).Save(s).Error
 }
@@ -148,6 +157,12 @@ func (r *postgresSubjectRepository) List(ctx context.Context, filters sharedrepo
 func (r *postgresSubjectRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&entities.Subject{}).Where("name = ? AND is_active = true", name).Count(&count).Error
+	return count > 0, err
+}
+
+func (r *postgresSubjectRepository) ExistsBySchoolIDAndName(ctx context.Context, schoolID uuid.UUID, name string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&entities.Subject{}).Where("school_id = ? AND name = ? AND is_active = true", schoolID, name).Count(&count).Error
 	return count > 0, err
 }
 

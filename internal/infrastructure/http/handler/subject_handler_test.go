@@ -8,16 +8,33 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/handler"
+	authmw "github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/middleware"
+	"github.com/EduGoGroup/edugo-shared/auth"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/test/mock"
 )
+
+var testSchoolID = uuid.New().String()
+
+// withSchoolContext returns a middleware that injects a school context for tests
+func withSchoolContext(schoolID string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set(authmw.ContextKeyActiveContext, &auth.UserContext{
+			RoleID:   uuid.New().String(),
+			RoleName: "admin",
+			SchoolID: schoolID,
+		})
+		c.Next()
+	}
+}
 
 func TestSubjectHandler_CreateSubject(t *testing.T) {
 	tests := []struct {
@@ -30,8 +47,8 @@ func TestSubjectHandler_CreateSubject(t *testing.T) {
 			name: "success - returns 201",
 			body: dto.CreateSubjectRequest{Name: "Mathematics"},
 			setupMock: func(m *mock.MockSubjectService) {
-				m.CreateSubjectFn = func(_ context.Context, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error) {
-					return &dto.SubjectResponse{ID: uuid.New().String(), Name: req.Name, IsActive: true}, nil
+				m.CreateSubjectFn = func(_ context.Context, _ string, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error) {
+					return &dto.SubjectResponse{ID: uuid.New().String(), SchoolID: testSchoolID, Name: req.Name, IsActive: true}, nil
 				}
 			},
 			wantStatus: http.StatusCreated,
@@ -46,7 +63,7 @@ func TestSubjectHandler_CreateSubject(t *testing.T) {
 			name: "error - duplicate name",
 			body: dto.CreateSubjectRequest{Name: "Math"},
 			setupMock: func(m *mock.MockSubjectService) {
-				m.CreateSubjectFn = func(_ context.Context, _ dto.CreateSubjectRequest) (*dto.SubjectResponse, error) {
+				m.CreateSubjectFn = func(_ context.Context, _ string, _ dto.CreateSubjectRequest) (*dto.SubjectResponse, error) {
 					return nil, errors.NewAlreadyExistsError("subject")
 				}
 			},
@@ -63,7 +80,7 @@ func TestSubjectHandler_CreateSubject(t *testing.T) {
 
 			h := handler.NewSubjectHandler(mockSvc, mock.NewMockLogger())
 			r := newTestRouter()
-			r.POST("/subjects", h.CreateSubject)
+			r.POST("/subjects", withSchoolContext(testSchoolID), h.CreateSubject)
 
 			bodyBytes, _ := json.Marshal(tt.body)
 			req, _ := http.NewRequest(http.MethodPost, "/subjects", bytes.NewReader(bodyBytes))
@@ -74,6 +91,21 @@ func TestSubjectHandler_CreateSubject(t *testing.T) {
 			assert.Equal(t, tt.wantStatus, w.Code)
 		})
 	}
+}
+
+func TestSubjectHandler_CreateSubject_NoSchoolContext(t *testing.T) {
+	mockSvc := &mock.MockSubjectService{}
+	h := handler.NewSubjectHandler(mockSvc, mock.NewMockLogger())
+	r := newTestRouter()
+	r.POST("/subjects", h.CreateSubject) // No school context middleware
+
+	body, _ := json.Marshal(dto.CreateSubjectRequest{Name: "Math"})
+	req, _ := http.NewRequest(http.MethodPost, "/subjects", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
 }
 
 func TestSubjectHandler_GetSubject(t *testing.T) {
@@ -88,7 +120,7 @@ func TestSubjectHandler_GetSubject(t *testing.T) {
 			id:   uuid.New().String(),
 			setupMock: func(m *mock.MockSubjectService) {
 				m.GetSubjectFn = func(_ context.Context, _ string) (*dto.SubjectResponse, error) {
-					return &dto.SubjectResponse{ID: uuid.New().String(), Name: "Math"}, nil
+					return &dto.SubjectResponse{ID: uuid.New().String(), SchoolID: testSchoolID, Name: "Math"}, nil
 				}
 			},
 			wantStatus: http.StatusOK,
@@ -134,7 +166,7 @@ func TestSubjectHandler_ListSubjects(t *testing.T) {
 		{
 			name: "success",
 			setupMock: func(m *mock.MockSubjectService) {
-				m.ListSubjectsFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
+				m.ListSubjectsFn = func(_ context.Context, _ string, _ sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
 					return []dto.SubjectResponse{}, nil
 				}
 			},
@@ -151,7 +183,7 @@ func TestSubjectHandler_ListSubjects(t *testing.T) {
 
 			h := handler.NewSubjectHandler(mockSvc, mock.NewMockLogger())
 			r := newTestRouter()
-			r.GET("/subjects", h.ListSubjects)
+			r.GET("/subjects", withSchoolContext(testSchoolID), h.ListSubjects)
 
 			req, _ := http.NewRequest(http.MethodGet, "/subjects", nil)
 			w := httptest.NewRecorder()
@@ -160,6 +192,19 @@ func TestSubjectHandler_ListSubjects(t *testing.T) {
 			assert.Equal(t, tt.wantStatus, w.Code)
 		})
 	}
+}
+
+func TestSubjectHandler_ListSubjects_NoSchoolContext(t *testing.T) {
+	mockSvc := &mock.MockSubjectService{}
+	h := handler.NewSubjectHandler(mockSvc, mock.NewMockLogger())
+	r := newTestRouter()
+	r.GET("/subjects", h.ListSubjects) // No school context middleware
+
+	req, _ := http.NewRequest(http.MethodGet, "/subjects", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
 }
 
 func TestSubjectHandler_DeleteSubject(t *testing.T) {
