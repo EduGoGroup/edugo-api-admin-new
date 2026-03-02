@@ -8,6 +8,8 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
+	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/middleware"
+	"github.com/EduGoGroup/edugo-shared/auth"
 	"github.com/EduGoGroup/edugo-shared/logger"
 	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 )
@@ -21,6 +23,21 @@ func NewSubjectHandler(subjectService service.SubjectService, logger logger.Logg
 	return &SubjectHandler{subjectService: subjectService, logger: logger}
 }
 
+// extractSchoolID extracts the school ID from the JWT active context
+func (h *SubjectHandler) extractSchoolID(c *gin.Context) (string, bool) {
+	val, exists := c.Get(middleware.ContextKeyActiveContext)
+	if !exists {
+		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "no active context", Code: "NO_ACTIVE_CONTEXT"})
+		return "", false
+	}
+	ac, ok := val.(*auth.UserContext)
+	if !ok || ac.SchoolID == "" {
+		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "no school context", Code: "NO_SCHOOL_CONTEXT"})
+		return "", false
+	}
+	return ac.SchoolID, true
+}
+
 // CreateSubject godoc
 // @Summary Create a subject
 // @Tags subjects
@@ -30,16 +47,21 @@ func NewSubjectHandler(subjectService service.SubjectService, logger logger.Logg
 // @Success 201 {object} dto.SubjectResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /subjects [post]
 func (h *SubjectHandler) CreateSubject(c *gin.Context) {
+	schoolID, ok := h.extractSchoolID(c)
+	if !ok {
+		return
+	}
 	var req dto.CreateSubjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
 		return
 	}
-	subject, err := h.subjectService.CreateSubject(c.Request.Context(), req)
+	subject, err := h.subjectService.CreateSubject(c.Request.Context(), schoolID, req)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -48,7 +70,7 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 }
 
 // ListSubjects godoc
-// @Summary List all subjects
+// @Summary List subjects for the current school
 // @Tags subjects
 // @Accept json
 // @Produce json
@@ -56,10 +78,15 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 // @Param search_fields query string false "Comma-separated fields to search"
 // @Success 200 {array} dto.SubjectResponse
 // @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /subjects [get]
 func (h *SubjectHandler) ListSubjects(c *gin.Context) {
+	schoolID, ok := h.extractSchoolID(c)
+	if !ok {
+		return
+	}
 	var filters sharedrepo.ListFilters
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
@@ -67,7 +94,7 @@ func (h *SubjectHandler) ListSubjects(c *gin.Context) {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	subjects, err := h.subjectService.ListSubjects(c.Request.Context(), filters)
+	subjects, err := h.subjectService.ListSubjects(c.Request.Context(), schoolID, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return

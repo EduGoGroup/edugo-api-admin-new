@@ -15,9 +15,9 @@ import (
 
 // SubjectService defines the subject service interface
 type SubjectService interface {
-	CreateSubject(ctx context.Context, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error)
+	CreateSubject(ctx context.Context, schoolID string, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error)
 	GetSubject(ctx context.Context, id string) (*dto.SubjectResponse, error)
-	ListSubjects(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error)
+	ListSubjects(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error)
 	UpdateSubject(ctx context.Context, id string, req dto.UpdateSubjectRequest) (*dto.SubjectResponse, error)
 	DeleteSubject(ctx context.Context, id string) error
 }
@@ -32,12 +32,17 @@ func NewSubjectService(subjectRepo repository.SubjectRepository, logger logger.L
 	return &subjectService{subjectRepo: subjectRepo, logger: logger}
 }
 
-func (s *subjectService) CreateSubject(ctx context.Context, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error) {
+func (s *subjectService) CreateSubject(ctx context.Context, schoolID string, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error) {
 	if req.Name == "" || len(req.Name) < 2 {
 		return nil, errors.NewValidationError("name must be at least 2 characters")
 	}
 
-	exists, err := s.subjectRepo.ExistsByName(ctx, req.Name)
+	schoolUUID, err := uuid.Parse(schoolID)
+	if err != nil {
+		return nil, errors.NewValidationError("invalid school ID")
+	}
+
+	exists, err := s.subjectRepo.ExistsBySchoolIDAndName(ctx, schoolUUID, req.Name)
 	if err != nil {
 		return nil, errors.NewDatabaseError("check subject", err)
 	}
@@ -48,6 +53,7 @@ func (s *subjectService) CreateSubject(ctx context.Context, req dto.CreateSubjec
 	now := time.Now()
 	subject := &entities.Subject{
 		ID:        uuid.New(),
+		SchoolID:  schoolUUID,
 		Name:      req.Name,
 		IsActive:  true,
 		CreatedAt: now,
@@ -56,15 +62,22 @@ func (s *subjectService) CreateSubject(ctx context.Context, req dto.CreateSubjec
 	if req.Description != "" {
 		subject.Description = &req.Description
 	}
-	if req.Metadata != "" {
-		subject.Metadata = &req.Metadata
+	if req.AcademicUnitID != "" {
+		auID, err := uuid.Parse(req.AcademicUnitID)
+		if err != nil {
+			return nil, errors.NewValidationError("invalid academic_unit_id")
+		}
+		subject.AcademicUnitID = &auID
+	}
+	if req.Code != "" {
+		subject.Code = &req.Code
 	}
 
 	if err := s.subjectRepo.Create(ctx, subject); err != nil {
 		return nil, errors.NewDatabaseError("create subject", err)
 	}
 
-	s.logger.Info("entity created", "entity_type", "subject", "entity_id", subject.ID.String())
+	s.logger.Info("entity created", "entity_type", "subject", "entity_id", subject.ID.String(), "school_id", schoolID)
 	response := dto.ToSubjectResponse(subject)
 	return &response, nil
 }
@@ -85,8 +98,12 @@ func (s *subjectService) GetSubject(ctx context.Context, id string) (*dto.Subjec
 	return &response, nil
 }
 
-func (s *subjectService) ListSubjects(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
-	subjects, err := s.subjectRepo.List(ctx, filters)
+func (s *subjectService) ListSubjects(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
+	schoolUUID, err := uuid.Parse(schoolID)
+	if err != nil {
+		return nil, errors.NewValidationError("invalid school ID")
+	}
+	subjects, err := s.subjectRepo.FindBySchoolID(ctx, schoolUUID, filters)
 	if err != nil {
 		return nil, errors.NewDatabaseError("list subjects", err)
 	}
@@ -112,8 +129,23 @@ func (s *subjectService) UpdateSubject(ctx context.Context, id string, req dto.U
 	if req.Description != nil {
 		subject.Description = req.Description
 	}
-	if req.Metadata != nil {
-		subject.Metadata = req.Metadata
+	if req.AcademicUnitID != nil {
+		if *req.AcademicUnitID == "" {
+			subject.AcademicUnitID = nil
+		} else {
+			auID, err := uuid.Parse(*req.AcademicUnitID)
+			if err != nil {
+				return nil, errors.NewValidationError("invalid academic_unit_id")
+			}
+			subject.AcademicUnitID = &auID
+		}
+	}
+	if req.Code != nil {
+		if *req.Code == "" {
+			subject.Code = nil
+		} else {
+			subject.Code = req.Code
+		}
 	}
 	subject.UpdatedAt = time.Now()
 

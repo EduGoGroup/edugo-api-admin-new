@@ -226,12 +226,14 @@ func (m *MockMembershipRepository) Delete(ctx context.Context, id uuid.UUID) err
 // ---------------------------------------------------------------------------
 
 type MockSubjectRepository struct {
-	CreateFn       func(ctx context.Context, subject *entities.Subject) error
-	FindByIDFn     func(ctx context.Context, id uuid.UUID) (*entities.Subject, error)
-	UpdateFn       func(ctx context.Context, subject *entities.Subject) error
-	DeleteFn       func(ctx context.Context, id uuid.UUID) error
-	ListFn         func(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.Subject, error)
-	ExistsByNameFn func(ctx context.Context, name string) (bool, error)
+	CreateFn                  func(ctx context.Context, subject *entities.Subject) error
+	FindByIDFn                func(ctx context.Context, id uuid.UUID) (*entities.Subject, error)
+	FindBySchoolIDFn          func(ctx context.Context, schoolID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Subject, error)
+	UpdateFn                  func(ctx context.Context, subject *entities.Subject) error
+	DeleteFn                  func(ctx context.Context, id uuid.UUID) error
+	ListFn                    func(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.Subject, error)
+	ExistsByNameFn            func(ctx context.Context, name string) (bool, error)
+	ExistsBySchoolIDAndNameFn func(ctx context.Context, schoolID uuid.UUID, name string) (bool, error)
 }
 
 func (m *MockSubjectRepository) Create(ctx context.Context, subject *entities.Subject) error {
@@ -244,6 +246,13 @@ func (m *MockSubjectRepository) Create(ctx context.Context, subject *entities.Su
 func (m *MockSubjectRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.Subject, error) {
 	if m.FindByIDFn != nil {
 		return m.FindByIDFn(ctx, id)
+	}
+	return nil, nil
+}
+
+func (m *MockSubjectRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Subject, error) {
+	if m.FindBySchoolIDFn != nil {
+		return m.FindBySchoolIDFn(ctx, schoolID, filters)
 	}
 	return nil, nil
 }
@@ -272,6 +281,13 @@ func (m *MockSubjectRepository) List(ctx context.Context, filters sharedrepo.Lis
 func (m *MockSubjectRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
 	if m.ExistsByNameFn != nil {
 		return m.ExistsByNameFn(ctx, name)
+	}
+	return false, nil
+}
+
+func (m *MockSubjectRepository) ExistsBySchoolIDAndName(ctx context.Context, schoolID uuid.UUID, name string) (bool, error) {
+	if m.ExistsBySchoolIDAndNameFn != nil {
+		return m.ExistsBySchoolIDAndNameFn(ctx, schoolID, name)
 	}
 	return false, nil
 }
