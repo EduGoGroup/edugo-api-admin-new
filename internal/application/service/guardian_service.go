@@ -53,6 +53,11 @@ func (s *guardianService) CreateRelation(ctx context.Context, req dto.CreateGuar
 		return nil, errors.NewAlreadyExistsError("guardian_relation")
 	}
 
+	var createdByUUID *uuid.UUID
+	if parsed, err := uuid.Parse(createdBy); err == nil {
+		createdByUUID = &parsed
+	}
+
 	now := time.Now()
 	relation := &entities.GuardianRelation{
 		ID:               uuid.New(),
@@ -62,7 +67,7 @@ func (s *guardianService) CreateRelation(ctx context.Context, req dto.CreateGuar
 		IsActive:         true,
 		CreatedAt:        now,
 		UpdatedAt:        now,
-		CreatedBy:        createdBy,
+		CreatedBy:        createdByUUID,
 	}
 
 	if err := s.guardianRepo.Create(ctx, relation); err != nil {

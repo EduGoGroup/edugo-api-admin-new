@@ -1468,7 +1468,7 @@ const docTemplate = `{
                 "tags": [
                     "subjects"
                 ],
-                "summary": "List all subjects",
+                "summary": "List subjects for the current school",
                 "parameters": [
                     {
                         "type": "string",
@@ -1495,6 +1495,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
                         }
@@ -1549,6 +1555,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
                         }
@@ -2551,10 +2563,13 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
-                "description": {
+                "academic_unit_id": {
                     "type": "string"
                 },
-                "metadata": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
                     "type": "string"
                 },
                 "name": {
@@ -2739,6 +2754,12 @@ const docTemplate = `{
         "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SubjectResponse": {
             "type": "object",
             "properties": {
+                "academic_unit_id": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -2751,10 +2772,10 @@ const docTemplate = `{
                 "is_active": {
                     "type": "boolean"
                 },
-                "metadata": {
+                "name": {
                     "type": "string"
                 },
-                "name": {
+                "school_id": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -2838,10 +2859,13 @@ const docTemplate = `{
         "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSubjectRequest": {
             "type": "object",
             "properties": {
-                "description": {
+                "academic_unit_id": {
                     "type": "string"
                 },
-                "metadata": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
                     "type": "string"
                 },
                 "name": {
