@@ -33,6 +33,10 @@ type GuardianRelationResponse struct {
 
 // ToGuardianRelationResponse converts a GuardianRelation entity to response
 func ToGuardianRelationResponse(relation *entities.GuardianRelation) *GuardianRelationResponse {
+	createdBy := ""
+	if relation.CreatedBy != nil {
+		createdBy = relation.CreatedBy.String()
+	}
 	return &GuardianRelationResponse{
 		ID:               relation.ID.String(),
 		GuardianID:       relation.GuardianID.String(),
@@ -41,7 +45,7 @@ func ToGuardianRelationResponse(relation *entities.GuardianRelation) *GuardianRe
 		IsActive:         relation.IsActive,
 		CreatedAt:        relation.CreatedAt,
 		UpdatedAt:        relation.UpdatedAt,
-		CreatedBy:        relation.CreatedBy,
+		CreatedBy:        createdBy,
 	}
 }
 

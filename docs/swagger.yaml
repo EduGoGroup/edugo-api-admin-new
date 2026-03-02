@@ -105,9 +105,11 @@ definitions:
     type: object
   github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateSubjectRequest:
     properties:
-      description:
+      academic_unit_id:
         type: string
-      metadata:
+      code:
+        type: string
+      description:
         type: string
       name:
         minLength: 2
@@ -232,6 +234,10 @@ definitions:
     type: object
   github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SubjectResponse:
     properties:
+      academic_unit_id:
+        type: string
+      code:
+        type: string
       created_at:
         type: string
       description:
@@ -240,9 +246,9 @@ definitions:
         type: string
       is_active:
         type: boolean
-      metadata:
-        type: string
       name:
+        type: string
+      school_id:
         type: string
       updated_at:
         type: string
@@ -297,9 +303,11 @@ definitions:
     type: object
   github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSubjectRequest:
     properties:
-      description:
+      academic_unit_id:
         type: string
-      metadata:
+      code:
+        type: string
+      description:
         type: string
       name:
         type: string
@@ -1276,13 +1284,17 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: List all subjects
+      summary: List subjects for the current school
       tags:
       - subjects
     post:
@@ -1308,6 +1320,10 @@ paths:
             $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
         "500":
