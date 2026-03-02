@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [0.1.0] - 2026-02-24
 
 
+## [0.4.0] - 2026-03-02
+
+### Tipo de Release: patch
+
+- fix: update subject service tests for school_id parameter
+- chore: bump edugo-infrastructure/postgres to v0.55.0
+- feat: add school_id filtering to subjects entity (multi-tenancy fix)
+
+---
+
 ## [0.3.0] - 2026-02-26
 
 ### Tipo de Release: patch
