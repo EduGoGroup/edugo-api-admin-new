@@ -217,16 +217,16 @@ func (m *MockMembershipService) ExpireMembership(ctx context.Context, id string)
 // ---------------------------------------------------------------------------
 
 type MockSubjectService struct {
-	CreateSubjectFn func(ctx context.Context, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error)
+	CreateSubjectFn func(ctx context.Context, schoolID string, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error)
 	GetSubjectFn    func(ctx context.Context, id string) (*dto.SubjectResponse, error)
-	ListSubjectsFn  func(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error)
+	ListSubjectsFn  func(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error)
 	UpdateSubjectFn func(ctx context.Context, id string, req dto.UpdateSubjectRequest) (*dto.SubjectResponse, error)
 	DeleteSubjectFn func(ctx context.Context, id string) error
 }
 
-func (m *MockSubjectService) CreateSubject(ctx context.Context, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error) {
+func (m *MockSubjectService) CreateSubject(ctx context.Context, schoolID string, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error) {
 	if m.CreateSubjectFn != nil {
-		return m.CreateSubjectFn(ctx, req)
+		return m.CreateSubjectFn(ctx, schoolID, req)
 	}
 	return nil, nil
 }
@@ -238,9 +238,9 @@ func (m *MockSubjectService) GetSubject(ctx context.Context, id string) (*dto.Su
 	return nil, nil
 }
 
-func (m *MockSubjectService) ListSubjects(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
+func (m *MockSubjectService) ListSubjects(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
 	if m.ListSubjectsFn != nil {
-		return m.ListSubjectsFn(ctx, filters)
+		return m.ListSubjectsFn(ctx, schoolID, filters)
 	}
 	return nil, nil
 }

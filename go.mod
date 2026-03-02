@@ -3,7 +3,7 @@ module github.com/EduGoGroup/edugo-api-admin-new
 go 1.25.0
 
 require (
-	github.com/EduGoGroup/edugo-infrastructure/postgres v0.53.0
+	github.com/EduGoGroup/edugo-infrastructure/postgres v0.55.0
 	github.com/EduGoGroup/edugo-shared/auth v0.50.1
 	github.com/EduGoGroup/edugo-shared/common v0.50.2
 	github.com/EduGoGroup/edugo-shared/logger v0.50.1
