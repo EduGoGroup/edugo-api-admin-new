@@ -8,17 +8,18 @@ import (
 
 // CreateUserRequest represents the request to create a user
 type CreateUserRequest struct {
-	Email     string `json:"email" binding:"required,email"`
-	Password  string `json:"password" binding:"required,min=8"`
-	FirstName string `json:"first_name" binding:"required"`
-	LastName  string `json:"last_name" binding:"required"`
+	Email     string      `json:"email" binding:"required,email"`
+	Password  string      `json:"password" binding:"required,min=8"`
+	FirstName string      `json:"first_name" binding:"required"`
+	LastName  string      `json:"last_name" binding:"required"`
+	IsActive  interface{} `json:"is_active,omitempty"`
 }
 
 // UpdateUserRequest represents the request to update a user
 type UpdateUserRequest struct {
-	FirstName *string `json:"first_name,omitempty"`
-	LastName  *string `json:"last_name,omitempty"`
-	IsActive  *bool   `json:"is_active,omitempty"`
+	FirstName *string     `json:"first_name,omitempty"`
+	LastName  *string     `json:"last_name,omitempty"`
+	IsActive  interface{} `json:"is_active,omitempty"`
 }
 
 // UserResponse represents a user in API responses

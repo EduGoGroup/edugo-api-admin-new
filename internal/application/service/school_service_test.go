@@ -250,11 +250,11 @@ func TestSchoolService_ListSchools(t *testing.T) {
 		{
 			name: "success - returns list",
 			setupMock: func(m *mock.MockSchoolRepository) {
-				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, error) {
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, int, error) {
 					return []*entities.School{
 						{ID: uuid.New(), Name: "School 1", Code: "S1"},
 						{ID: uuid.New(), Name: "School 2", Code: "S2"},
-					}, nil
+					}, 2, nil
 				}
 			},
 			wantErr:   false,
@@ -263,8 +263,8 @@ func TestSchoolService_ListSchools(t *testing.T) {
 		{
 			name: "success - empty list",
 			setupMock: func(m *mock.MockSchoolRepository) {
-				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, error) {
-					return []*entities.School{}, nil
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, int, error) {
+					return []*entities.School{}, 0, nil
 				}
 			},
 			wantErr:   false,
@@ -273,8 +273,8 @@ func TestSchoolService_ListSchools(t *testing.T) {
 		{
 			name: "error - database error",
 			setupMock: func(m *mock.MockSchoolRepository) {
-				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, error) {
-					return nil, fmt.Errorf("timeout")
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, int, error) {
+					return nil, 0, fmt.Errorf("timeout")
 				}
 			},
 			wantErr: true,
@@ -289,7 +289,7 @@ func TestSchoolService_ListSchools(t *testing.T) {
 			}
 
 			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults)
-			result, err := svc.ListSchools(context.Background(), sharedrepo.ListFilters{})
+			result, _, err := svc.ListSchools(context.Background(), sharedrepo.ListFilters{})
 
 			if tt.wantErr {
 				require.Error(t, err)

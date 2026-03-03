@@ -166,8 +166,8 @@ func TestSubjectHandler_ListSubjects(t *testing.T) {
 		{
 			name: "success",
 			setupMock: func(m *mock.MockSubjectService) {
-				m.ListSubjectsFn = func(_ context.Context, _ string, _ sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
-					return []dto.SubjectResponse{}, nil
+				m.ListSubjectsFn = func(_ context.Context, _ string, _ sharedrepo.ListFilters) ([]dto.SubjectResponse, int, error) {
+					return []dto.SubjectResponse{}, 0, nil
 				}
 			},
 			wantStatus: http.StatusOK,

@@ -20,7 +20,7 @@ type SchoolService interface {
 	GetSchool(ctx context.Context, id string) (*dto.SchoolResponse, error)
 	GetSchoolByCode(ctx context.Context, code string) (*dto.SchoolResponse, error)
 	UpdateSchool(ctx context.Context, id string, req dto.UpdateSchoolRequest) (*dto.SchoolResponse, error)
-	ListSchools(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SchoolResponse, error)
+	ListSchools(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SchoolResponse, int, error)
 	DeleteSchool(ctx context.Context, id string) error
 }
 
@@ -196,12 +196,12 @@ func (s *schoolService) UpdateSchool(ctx context.Context, id string, req dto.Upd
 	return &response, nil
 }
 
-func (s *schoolService) ListSchools(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SchoolResponse, error) {
-	schools, err := s.schoolRepo.List(ctx, filters)
+func (s *schoolService) ListSchools(ctx context.Context, filters sharedrepo.ListFilters) ([]dto.SchoolResponse, int, error) {
+	schools, total, err := s.schoolRepo.List(ctx, filters)
 	if err != nil {
-		return nil, errors.NewDatabaseError("list schools", err)
+		return nil, 0, errors.NewDatabaseError("list schools", err)
 	}
-	return dto.ToSchoolResponseList(schools), nil
+	return dto.ToSchoolResponseList(schools), total, nil
 }
 
 func (s *schoolService) DeleteSchool(ctx context.Context, id string) error {

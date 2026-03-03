@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -57,8 +58,8 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 		return
 	}
 	var req dto.CreateSubjectRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	subject, err := h.subjectService.CreateSubject(c.Request.Context(), schoolID, req)
@@ -88,18 +89,32 @@ func (h *SubjectHandler) ListSubjects(c *gin.Context) {
 		return
 	}
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
+			filters.Limit = limit
+		}
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			filters.Page = page
+		}
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	subjects, err := h.subjectService.ListSubjects(c.Request.Context(), schoolID, filters)
+	subjects, total, err := h.subjectService.ListSubjects(c.Request.Context(), schoolID, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, subjects)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(subjects, total, page, filters.Limit))
 }
 
 // GetSubject godoc
@@ -141,8 +156,8 @@ func (h *SubjectHandler) GetSubject(c *gin.Context) {
 func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 	id := c.Param("id")
 	var req dto.UpdateSubjectRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	subject, err := h.subjectService.UpdateSubject(c.Request.Context(), id, req)

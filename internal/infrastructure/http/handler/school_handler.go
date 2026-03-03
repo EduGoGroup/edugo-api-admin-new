@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -37,8 +38,8 @@ func NewSchoolHandler(schoolService service.SchoolService, logger logger.Logger)
 // @Router /schools [post]
 func (h *SchoolHandler) CreateSchool(c *gin.Context) {
 	var req dto.CreateSchoolRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	school, err := h.schoolService.CreateSchool(c.Request.Context(), req)
@@ -117,18 +118,32 @@ func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 // @Router /schools [get]
 func (h *SchoolHandler) ListSchools(c *gin.Context) {
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
+			filters.Limit = limit
+		}
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			filters.Page = page
+		}
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	schools, err := h.schoolService.ListSchools(c.Request.Context(), filters)
+	schools, total, err := h.schoolService.ListSchools(c.Request.Context(), filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, schools)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(schools, total, page, filters.Limit))
 }
 
 // UpdateSchool godoc
@@ -152,8 +167,8 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 		return
 	}
 	var req dto.UpdateSchoolRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	school, err := h.schoolService.UpdateSchool(c.Request.Context(), id, req)

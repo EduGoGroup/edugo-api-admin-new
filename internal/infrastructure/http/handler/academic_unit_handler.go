@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -40,8 +41,8 @@ func NewAcademicUnitHandler(unitService service.AcademicUnitService, logger logg
 func (h *AcademicUnitHandler) CreateUnit(c *gin.Context) {
 	schoolID := c.Param("id")
 	var req dto.CreateAcademicUnitRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	unit, err := h.unitService.CreateUnit(c.Request.Context(), schoolID, req)
@@ -67,18 +68,32 @@ func (h *AcademicUnitHandler) CreateUnit(c *gin.Context) {
 func (h *AcademicUnitHandler) ListUnitsBySchool(c *gin.Context) {
 	schoolID := c.Param("id")
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
+			filters.Limit = limit
+		}
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			filters.Page = page
+		}
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	units, err := h.unitService.ListUnitsBySchool(c.Request.Context(), schoolID, filters)
+	units, total, err := h.unitService.ListUnitsBySchool(c.Request.Context(), schoolID, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, units)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(units, total, page, filters.Limit))
 }
 
 // GetUnitTree godoc
@@ -120,18 +135,32 @@ func (h *AcademicUnitHandler) ListUnitsByType(c *gin.Context) {
 	schoolID := c.Param("id")
 	unitType := c.Query("type")
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
+			filters.Limit = limit
+		}
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			filters.Page = page
+		}
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	units, err := h.unitService.ListUnitsByType(c.Request.Context(), schoolID, unitType, filters)
+	units, total, err := h.unitService.ListUnitsByType(c.Request.Context(), schoolID, unitType, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, units)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(units, total, page, filters.Limit))
 }
 
 // GetUnit godoc
@@ -173,8 +202,8 @@ func (h *AcademicUnitHandler) GetUnit(c *gin.Context) {
 func (h *AcademicUnitHandler) UpdateUnit(c *gin.Context) {
 	id := c.Param("id")
 	var req dto.UpdateAcademicUnitRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	unit, err := h.unitService.UpdateUnit(c.Request.Context(), id, req)

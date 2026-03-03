@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
@@ -17,7 +18,7 @@ import (
 type UserService interface {
 	CreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.UserResponse, error)
 	GetUser(ctx context.Context, id string) (*dto.UserResponse, error)
-	ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, error)
+	ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, int, error)
 	UpdateUser(ctx context.Context, id string, req dto.UpdateUserRequest) (*dto.UserResponse, error)
 	DeleteUser(ctx context.Context, id string) error
 }
@@ -47,13 +48,17 @@ func (s *userService) CreateUser(ctx context.Context, req dto.CreateUserRequest)
 	}
 
 	now := time.Now()
+	
+	// Usamos nuestra función flexible para parsear el estado
+	isActive := parseFlexibleBool(req.IsActive, true)
+
 	user := &entities.User{
 		ID:           uuid.New(),
 		Email:        req.Email,
 		PasswordHash: hashedPassword,
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
-		IsActive:     true,
+		IsActive:     isActive,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
@@ -81,12 +86,12 @@ func (s *userService) GetUser(ctx context.Context, id string) (*dto.UserResponse
 	return dto.ToUserResponse(user), nil
 }
 
-func (s *userService) ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, error) {
-	users, err := s.userRepo.List(ctx, filters)
+func (s *userService) ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, int, error) {
+	users, total, err := s.userRepo.List(ctx, filters)
 	if err != nil {
-		return nil, errors.NewDatabaseError("list users", err)
+		return nil, 0, errors.NewDatabaseError("list users", err)
 	}
-	return dto.ToUserResponseList(users), nil
+	return dto.ToUserResponseList(users), total, nil
 }
 
 func (s *userService) UpdateUser(ctx context.Context, id string, req dto.UpdateUserRequest) (*dto.UserResponse, error) {
@@ -109,7 +114,7 @@ func (s *userService) UpdateUser(ctx context.Context, id string, req dto.UpdateU
 		user.LastName = *req.LastName
 	}
 	if req.IsActive != nil {
-		user.IsActive = *req.IsActive
+		user.IsActive = parseFlexibleBool(req.IsActive, user.IsActive)
 	}
 
 	user.UpdatedAt = time.Now()
@@ -138,4 +143,21 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 	}
 	s.logger.Info("entity deleted", "entity_type", "user", "entity_id", id)
 	return nil
+}
+
+// parseFlexibleBool maneja la conversión de bool o string a booleano real
+func parseFlexibleBool(val interface{}, defaultVal bool) bool {
+	if val == nil {
+		return defaultVal
+	}
+	switch v := val.(type) {
+	case bool:
+		return v
+	case string:
+		return v == "true" || v == "1" || v == "yes" || v == "on"
+	default:
+		// Si es otro tipo, intentamos convertirlo a string por si acaso
+		strVal := fmt.Sprintf("%v", v)
+		return strVal == "true" || strVal == "1"
+	}
 }

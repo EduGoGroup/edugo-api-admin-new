@@ -39,8 +39,8 @@ func NewUserHandler(userService service.UserService, logger logger.Logger) *User
 // @Router /users [post]
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req dto.CreateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	user, err := h.userService.CreateUser(c.Request.Context(), req)
@@ -78,20 +78,14 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 		filters.IsActive = &isActive
 	}
 	if limitStr := c.Query("limit"); limitStr != "" {
-		limit, err := strconv.Atoi(limitStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid limit parameter", Code: "INVALID_REQUEST"})
-			return
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
+			filters.Limit = limit
 		}
-		filters.Limit = limit
 	}
-	if offsetStr := c.Query("offset"); offsetStr != "" {
-		offset, err := strconv.Atoi(offsetStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid offset parameter", Code: "INVALID_REQUEST"})
-			return
+	if pageStr := c.Query("page"); pageStr != "" {
+		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
+			filters.Page = page
 		}
-		filters.Offset = offset
 	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
@@ -100,12 +94,17 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 		}
 	}
 
-	users, err := h.userService.ListUsers(c.Request.Context(), filters)
+	users, total, err := h.userService.ListUsers(c.Request.Context(), filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, users)
+
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(users, total, page, filters.Limit))
 }
 
 // GetUser godoc
@@ -156,8 +155,8 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 	var req dto.UpdateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	user, err := h.userService.UpdateUser(c.Request.Context(), id, req)
