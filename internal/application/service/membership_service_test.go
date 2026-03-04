@@ -72,7 +72,7 @@ func TestMembershipService_CreateMembership(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewMembershipService(mockRepo, mock.NewMockLogger())
+			svc := service.NewMembershipService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.CreateMembership(context.Background(), tt.request)
 
 			if tt.wantErr {
@@ -134,7 +134,7 @@ func TestMembershipService_GetMembership(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewMembershipService(mockRepo, mock.NewMockLogger())
+			svc := service.NewMembershipService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.GetMembership(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -191,7 +191,7 @@ func TestMembershipService_ExpireMembership(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewMembershipService(mockRepo, mock.NewMockLogger())
+			svc := service.NewMembershipService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.ExpireMembership(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -249,7 +249,7 @@ func TestMembershipService_DeleteMembership(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewMembershipService(mockRepo, mock.NewMockLogger())
+			svc := service.NewMembershipService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			err := svc.DeleteMembership(context.Background(), tt.id)
 
 			if tt.wantErr {
