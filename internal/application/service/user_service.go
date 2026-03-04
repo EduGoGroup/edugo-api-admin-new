@@ -8,6 +8,7 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	"github.com/EduGoGroup/edugo-shared/audit"
 	"github.com/EduGoGroup/edugo-shared/auth"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
@@ -25,13 +26,14 @@ type UserService interface {
 }
 
 type userService struct {
-	userRepo sharedrepo.UserRepository
-	logger   logger.Logger
+	userRepo    sharedrepo.UserRepository
+	logger      logger.Logger
+	auditLogger audit.AuditLogger
 }
 
 // NewUserService creates a new user service
-func NewUserService(userRepo sharedrepo.UserRepository, logger logger.Logger) UserService {
-	return &userService{userRepo: userRepo, logger: logger}
+func NewUserService(userRepo sharedrepo.UserRepository, logger logger.Logger, auditLogger audit.AuditLogger) UserService {
+	return &userService{userRepo: userRepo, logger: logger, auditLogger: auditLogger}
 }
 
 func (s *userService) CreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.UserResponse, error) {
@@ -72,6 +74,18 @@ func (s *userService) CreateUser(ctx context.Context, req dto.CreateUserRequest)
 	}
 
 	s.logger.Info("entity created", "entity_type", "user", "entity_id", user.ID.String(), "email", user.Email)
+
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action:       "create",
+		ResourceType: "user",
+		ResourceID:   user.ID.String(),
+		Severity:     audit.SeverityCritical,
+		Category:     audit.CategoryAdmin,
+		Metadata:     map[string]interface{}{"email": user.Email},
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "action", "create", "entity_type", "user", "entity_id", user.ID.String(), "error", err)
+	}
+
 	return dto.ToUserResponse(user), nil
 }
 
@@ -150,6 +164,17 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 		return errors.NewDatabaseError("delete user", err)
 	}
 	s.logger.Info("entity deleted", "entity_type", "user", "entity_id", id)
+
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action:       "delete",
+		ResourceType: "user",
+		ResourceID:   id,
+		Severity:     audit.SeverityCritical,
+		Category:     audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "action", "delete", "entity_type", "user", "entity_id", id, "error", err)
+	}
+
 	return nil
 }
 
