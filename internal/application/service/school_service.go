@@ -201,7 +201,7 @@ func (s *schoolService) ListSchools(ctx context.Context, filters sharedrepo.List
 	if err != nil {
 		return nil, 0, errors.NewDatabaseError("list schools", err)
 	}
-	return dto.ToSchoolResponseList(schools), total, nil
+	return dto.ToSchoolResponseList(schools), int(total), nil
 }
 
 func (s *schoolService) DeleteSchool(ctx context.Context, id string) error {

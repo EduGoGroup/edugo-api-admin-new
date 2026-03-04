@@ -250,7 +250,7 @@ func TestSchoolService_ListSchools(t *testing.T) {
 		{
 			name: "success - returns list",
 			setupMock: func(m *mock.MockSchoolRepository) {
-				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, int, error) {
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, int64, error) {
 					return []*entities.School{
 						{ID: uuid.New(), Name: "School 1", Code: "S1"},
 						{ID: uuid.New(), Name: "School 2", Code: "S2"},
@@ -263,7 +263,7 @@ func TestSchoolService_ListSchools(t *testing.T) {
 		{
 			name: "success - empty list",
 			setupMock: func(m *mock.MockSchoolRepository) {
-				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, int, error) {
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, int64, error) {
 					return []*entities.School{}, 0, nil
 				}
 			},
@@ -273,7 +273,7 @@ func TestSchoolService_ListSchools(t *testing.T) {
 		{
 			name: "error - database error",
 			setupMock: func(m *mock.MockSchoolRepository) {
-				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, int, error) {
+				m.ListFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]*entities.School, int64, error) {
 					return nil, 0, fmt.Errorf("timeout")
 				}
 			},

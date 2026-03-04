@@ -95,7 +95,7 @@ func (s *membershipService) ListMembershipsByUnit(ctx context.Context, unitID st
 	if err != nil {
 		return nil, 0, errors.NewDatabaseError("list memberships", err)
 	}
-	return dto.ToMembershipResponseList(memberships), total, nil
+	return dto.ToMembershipResponseList(memberships), int(total), nil
 }
 
 func (s *membershipService) ListMembershipsByRole(ctx context.Context, unitID, role string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, int, error) {
@@ -107,7 +107,7 @@ func (s *membershipService) ListMembershipsByRole(ctx context.Context, unitID, r
 	if err != nil {
 		return nil, 0, errors.NewDatabaseError("list memberships by role", err)
 	}
-	return dto.ToMembershipResponseList(memberships), total, nil
+	return dto.ToMembershipResponseList(memberships), int(total), nil
 }
 
 func (s *membershipService) ListMembershipsByUser(ctx context.Context, userID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, int, error) {
@@ -119,7 +119,7 @@ func (s *membershipService) ListMembershipsByUser(ctx context.Context, userID st
 	if err != nil {
 		return nil, 0, errors.NewDatabaseError("list user memberships", err)
 	}
-	return dto.ToMembershipResponseList(memberships), total, nil
+	return dto.ToMembershipResponseList(memberships), int(total), nil
 }
 
 func (s *membershipService) UpdateMembership(ctx context.Context, id string, req dto.UpdateMembershipRequest) (*dto.MembershipResponse, error) {

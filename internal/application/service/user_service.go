@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
@@ -48,9 +49,12 @@ func (s *userService) CreateUser(ctx context.Context, req dto.CreateUserRequest)
 	}
 
 	now := time.Now()
-	
+
 	// Usamos nuestra función flexible para parsear el estado
-	isActive := parseFlexibleBool(req.IsActive, true)
+	isActive, err := parseFlexibleBool(req.IsActive, true)
+	if err != nil {
+		return nil, errors.NewValidationError("invalid is_active value: " + err.Error())
+	}
 
 	user := &entities.User{
 		ID:           uuid.New(),
@@ -91,7 +95,7 @@ func (s *userService) ListUsers(ctx context.Context, filters sharedrepo.ListFilt
 	if err != nil {
 		return nil, 0, errors.NewDatabaseError("list users", err)
 	}
-	return dto.ToUserResponseList(users), total, nil
+	return dto.ToUserResponseList(users), int(total), nil
 }
 
 func (s *userService) UpdateUser(ctx context.Context, id string, req dto.UpdateUserRequest) (*dto.UserResponse, error) {
@@ -114,7 +118,11 @@ func (s *userService) UpdateUser(ctx context.Context, id string, req dto.UpdateU
 		user.LastName = *req.LastName
 	}
 	if req.IsActive != nil {
-		user.IsActive = parseFlexibleBool(req.IsActive, user.IsActive)
+		isActive, err := parseFlexibleBool(req.IsActive, user.IsActive)
+		if err != nil {
+			return nil, errors.NewValidationError("invalid is_active value: " + err.Error())
+		}
+		user.IsActive = isActive
 	}
 
 	user.UpdatedAt = time.Now()
@@ -145,19 +153,33 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-// parseFlexibleBool maneja la conversión de bool o string a booleano real
-func parseFlexibleBool(val interface{}, defaultVal bool) bool {
+// parseFlexibleBool converts a bool or string value to a boolean.
+// Returns an error for unrecognized string values.
+func parseFlexibleBool(val interface{}, defaultVal bool) (bool, error) {
 	if val == nil {
-		return defaultVal
+		return defaultVal, nil
 	}
 	switch v := val.(type) {
 	case bool:
-		return v
+		return v, nil
 	case string:
-		return v == "true" || v == "1" || v == "yes" || v == "on"
+		switch strings.ToLower(strings.TrimSpace(v)) {
+		case "true", "1", "yes":
+			return true, nil
+		case "false", "0", "no":
+			return false, nil
+		default:
+			return false, fmt.Errorf("invalid boolean value: %q (accepted: true/false, 1/0, yes/no)", v)
+		}
 	default:
-		// Si es otro tipo, intentamos convertirlo a string por si acaso
 		strVal := fmt.Sprintf("%v", v)
-		return strVal == "true" || strVal == "1"
+		switch strings.ToLower(strings.TrimSpace(strVal)) {
+		case "true", "1", "yes":
+			return true, nil
+		case "false", "0", "no":
+			return false, nil
+		default:
+			return false, fmt.Errorf("invalid boolean value: %q (accepted: true/false, 1/0, yes/no)", strVal)
+		}
 	}
 }

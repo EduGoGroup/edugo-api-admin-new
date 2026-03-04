@@ -18,7 +18,7 @@ type MockSchoolRepository struct {
 	FindByCodeFn   func(ctx context.Context, code string) (*entities.School, error)
 	UpdateFn       func(ctx context.Context, school *entities.School) error
 	DeleteFn       func(ctx context.Context, id uuid.UUID) error
-	ListFn         func(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.School, int, error)
+	ListFn         func(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.School, int64, error)
 	ExistsByCodeFn func(ctx context.Context, code string) (bool, error)
 }
 
@@ -57,7 +57,7 @@ func (m *MockSchoolRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (m *MockSchoolRepository) List(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.School, int, error) {
+func (m *MockSchoolRepository) List(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.School, int64, error) {
 	if m.ListFn != nil {
 		return m.ListFn(ctx, filters)
 	}
@@ -157,9 +157,9 @@ func (m *MockAcademicUnitRepository) ExistsBySchoolIDAndCode(ctx context.Context
 type MockMembershipRepository struct {
 	CreateFn              func(ctx context.Context, membership *entities.Membership) error
 	FindByIDFn            func(ctx context.Context, id uuid.UUID) (*entities.Membership, error)
-	FindByUserFn          func(ctx context.Context, userID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, int, error)
-	FindByUnitFn          func(ctx context.Context, unitID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, int, error)
-	FindByUnitAndRoleFn   func(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool, filters sharedrepo.ListFilters) ([]*entities.Membership, int, error)
+	FindByUserFn          func(ctx context.Context, userID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, int64, error)
+	FindByUnitFn          func(ctx context.Context, unitID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, int64, error)
+	FindByUnitAndRoleFn   func(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool, filters sharedrepo.ListFilters) ([]*entities.Membership, int64, error)
 	FindByUserAndSchoolFn func(ctx context.Context, userID, schoolID uuid.UUID) (*entities.Membership, error)
 	UpdateFn              func(ctx context.Context, membership *entities.Membership) error
 	DeleteFn              func(ctx context.Context, id uuid.UUID) error
@@ -179,21 +179,21 @@ func (m *MockMembershipRepository) FindByID(ctx context.Context, id uuid.UUID) (
 	return nil, nil
 }
 
-func (m *MockMembershipRepository) FindByUser(ctx context.Context, userID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, int, error) {
+func (m *MockMembershipRepository) FindByUser(ctx context.Context, userID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, int64, error) {
 	if m.FindByUserFn != nil {
 		return m.FindByUserFn(ctx, userID, filters)
 	}
 	return nil, 0, nil
 }
 
-func (m *MockMembershipRepository) FindByUnit(ctx context.Context, unitID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, int, error) {
+func (m *MockMembershipRepository) FindByUnit(ctx context.Context, unitID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Membership, int64, error) {
 	if m.FindByUnitFn != nil {
 		return m.FindByUnitFn(ctx, unitID, filters)
 	}
 	return nil, 0, nil
 }
 
-func (m *MockMembershipRepository) FindByUnitAndRole(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool, filters sharedrepo.ListFilters) ([]*entities.Membership, int, error) {
+func (m *MockMembershipRepository) FindByUnitAndRole(ctx context.Context, unitID uuid.UUID, role string, activeOnly bool, filters sharedrepo.ListFilters) ([]*entities.Membership, int64, error) {
 	if m.FindByUnitAndRoleFn != nil {
 		return m.FindByUnitAndRoleFn(ctx, unitID, role, activeOnly, filters)
 	}
@@ -366,7 +366,7 @@ type MockUserRepository struct {
 	ExistsByEmailFn func(ctx context.Context, email string) (bool, error)
 	UpdateFn        func(ctx context.Context, user *entities.User) error
 	DeleteFn        func(ctx context.Context, id uuid.UUID) error
-	ListFn          func(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.User, int, error)
+	ListFn          func(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.User, int64, error)
 }
 
 func (m *MockUserRepository) Create(ctx context.Context, user *entities.User) error {
@@ -411,7 +411,7 @@ func (m *MockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (m *MockUserRepository) List(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.User, int, error) {
+func (m *MockUserRepository) List(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.User, int64, error) {
 	if m.ListFn != nil {
 		return m.ListFn(ctx, filters)
 	}

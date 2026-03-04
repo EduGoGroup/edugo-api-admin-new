@@ -57,11 +57,12 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param is_active query bool false "Filter by active status"
-// @Param limit query int false "Limit results"
-// @Param offset query int false "Offset results"
+// @Param page query int false "Page number (1-based)" minimum(1)
+// @Param limit query int false "Number of items per page" minimum(1)
 // @Param search query string false "Search term (ILIKE)"
 // @Param search_fields query string false "Comma-separated fields to search"
-// @Success 200 {array} dto.UserResponse
+// @Success 200 {object} dto.PaginatedResponse
+// @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
@@ -78,14 +79,20 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 		filters.IsActive = &isActive
 	}
 	if limitStr := c.Query("limit"); limitStr != "" {
-		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
-			filters.Limit = limit
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "limit must be a positive integer", Code: "INVALID_REQUEST"})
+			return
 		}
+		filters.Limit = limit
 	}
 	if pageStr := c.Query("page"); pageStr != "" {
-		if page, err := strconv.Atoi(pageStr); err == nil && page > 0 {
-			filters.Page = page
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "page must be a positive integer", Code: "INVALID_REQUEST"})
+			return
 		}
+		filters.Page = page
 	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search

@@ -74,7 +74,7 @@ func (r *postgresAcademicUnitRepository) FindByType(ctx context.Context, schoolI
 		return nil, 0, err
 	}
 
-	query := baseQuery
+	query := baseQuery.Order("created_at ASC")
 	query = filters.ApplyPagination(query)
 	var units []*entities.AcademicUnit
 	if err := query.Find(&units).Error; err != nil {
