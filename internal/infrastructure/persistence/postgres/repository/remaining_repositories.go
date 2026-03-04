@@ -39,28 +39,48 @@ func (r *postgresAcademicUnitRepository) FindByID(ctx context.Context, id uuid.U
 	return &u, nil
 }
 
-func (r *postgresAcademicUnitRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
-	query := r.db.WithContext(ctx)
+func (r *postgresAcademicUnitRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, int, error) {
+	baseQuery := r.db.WithContext(ctx).Model(&entities.AcademicUnit{})
 	if includeDeleted {
-		query = query.Unscoped()
+		baseQuery = baseQuery.Unscoped()
 	}
-	query = query.Where("school_id = ?", schoolID)
-	query = filters.ApplySearch(query)
+	baseQuery = baseQuery.Where("school_id = ?", schoolID)
+	baseQuery = filters.ApplySearch(baseQuery)
+
+	var total int64
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	query := baseQuery.Order("created_at")
+	query = filters.ApplyPagination(query)
 	var units []*entities.AcademicUnit
-	err := query.Order("created_at").Find(&units).Error
-	return units, err
+	if err := query.Find(&units).Error; err != nil {
+		return nil, 0, err
+	}
+	return units, int(total), nil
 }
 
-func (r *postgresAcademicUnitRepository) FindByType(ctx context.Context, schoolID uuid.UUID, unitType string, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
-	query := r.db.WithContext(ctx)
+func (r *postgresAcademicUnitRepository) FindByType(ctx context.Context, schoolID uuid.UUID, unitType string, includeDeleted bool, filters sharedrepo.ListFilters) ([]*entities.AcademicUnit, int, error) {
+	baseQuery := r.db.WithContext(ctx).Model(&entities.AcademicUnit{})
 	if includeDeleted {
-		query = query.Unscoped()
+		baseQuery = baseQuery.Unscoped()
 	}
-	query = query.Where("school_id = ? AND type = ?", schoolID, unitType)
-	query = filters.ApplySearch(query)
+	baseQuery = baseQuery.Where("school_id = ? AND type = ?", schoolID, unitType)
+	baseQuery = filters.ApplySearch(baseQuery)
+
+	var total int64
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	query := baseQuery.Order("created_at ASC")
+	query = filters.ApplyPagination(query)
 	var units []*entities.AcademicUnit
-	err := query.Find(&units).Error
-	return units, err
+	if err := query.Find(&units).Error; err != nil {
+		return nil, 0, err
+	}
+	return units, int(total), nil
 }
 
 func (r *postgresAcademicUnitRepository) Update(ctx context.Context, unit *entities.AcademicUnit) error {
@@ -127,13 +147,22 @@ func (r *postgresSubjectRepository) FindByID(ctx context.Context, id uuid.UUID) 
 	return &s, nil
 }
 
-func (r *postgresSubjectRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Subject, error) {
-	query := r.db.WithContext(ctx).Where("school_id = ? AND is_active = true", schoolID)
-	query = filters.ApplySearch(query)
-	query = query.Order("name")
+func (r *postgresSubjectRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Subject, int, error) {
+	baseQuery := r.db.WithContext(ctx).Model(&entities.Subject{}).Where("school_id = ? AND is_active = true", schoolID)
+	baseQuery = filters.ApplySearch(baseQuery)
+
+	var total int64
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	query := baseQuery.Order("name")
+	query = filters.ApplyPagination(query)
 	var subjects []*entities.Subject
-	err := query.Find(&subjects).Error
-	return subjects, err
+	if err := query.Find(&subjects).Error; err != nil {
+		return nil, 0, err
+	}
+	return subjects, int(total), nil
 }
 
 func (r *postgresSubjectRepository) Update(ctx context.Context, s *entities.Subject) error {

@@ -177,11 +177,11 @@ func TestSubjectService_ListSubjects(t *testing.T) {
 			name:     "success",
 			schoolID: testSchoolID,
 			setupMock: func(m *mock.MockSubjectRepository) {
-				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ sharedrepo.ListFilters) ([]*entities.Subject, error) {
+				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ sharedrepo.ListFilters) ([]*entities.Subject, int, error) {
 					return []*entities.Subject{
 						{ID: uuid.New(), Name: "Math"},
 						{ID: uuid.New(), Name: "Science"},
-					}, nil
+					}, 2, nil
 				}
 			},
 			wantErr:   false,
@@ -191,8 +191,8 @@ func TestSubjectService_ListSubjects(t *testing.T) {
 			name:     "error - database error",
 			schoolID: testSchoolID,
 			setupMock: func(m *mock.MockSubjectRepository) {
-				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ sharedrepo.ListFilters) ([]*entities.Subject, error) {
-					return nil, fmt.Errorf("db error")
+				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ sharedrepo.ListFilters) ([]*entities.Subject, int, error) {
+					return nil, 0, fmt.Errorf("db error")
 				}
 			},
 			wantErr: true,
@@ -213,7 +213,7 @@ func TestSubjectService_ListSubjects(t *testing.T) {
 			}
 
 			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger())
-			result, err := svc.ListSubjects(context.Background(), tt.schoolID, sharedrepo.ListFilters{})
+			result, _, err := svc.ListSubjects(context.Background(), tt.schoolID, sharedrepo.ListFilters{})
 
 			if tt.wantErr {
 				require.Error(t, err)

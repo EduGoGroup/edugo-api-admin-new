@@ -244,10 +244,10 @@ func TestAcademicUnitService_ListUnitsBySchool(t *testing.T) {
 			name:     "success - returns units",
 			schoolID: schoolID.String(),
 			setupMock: func(m *mock.MockAcademicUnitRepository) {
-				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ bool, _ sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
+				m.FindBySchoolIDFn = func(_ context.Context, _ uuid.UUID, _ bool, _ sharedrepo.ListFilters) ([]*entities.AcademicUnit, int, error) {
 					return []*entities.AcademicUnit{
 						{ID: uuid.New(), SchoolID: schoolID, Name: "Unit 1"},
-					}, nil
+					}, 1, nil
 				}
 			},
 			wantErr:   false,
@@ -269,7 +269,7 @@ func TestAcademicUnitService_ListUnitsBySchool(t *testing.T) {
 			}
 
 			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger())
-			result, err := svc.ListUnitsBySchool(context.Background(), tt.schoolID, sharedrepo.ListFilters{})
+			result, _, err := svc.ListUnitsBySchool(context.Background(), tt.schoolID, sharedrepo.ListFilters{})
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -297,8 +297,8 @@ func TestAcademicUnitService_ListUnitsByType(t *testing.T) {
 			schoolID: schoolID.String(),
 			unitType: "grade",
 			setupMock: func(m *mock.MockAcademicUnitRepository) {
-				m.FindByTypeFn = func(_ context.Context, _ uuid.UUID, _ string, _ bool, _ sharedrepo.ListFilters) ([]*entities.AcademicUnit, error) {
-					return []*entities.AcademicUnit{}, nil
+				m.FindByTypeFn = func(_ context.Context, _ uuid.UUID, _ string, _ bool, _ sharedrepo.ListFilters) ([]*entities.AcademicUnit, int, error) {
+					return []*entities.AcademicUnit{}, 0, nil
 				}
 			},
 			wantErr: false,
@@ -321,7 +321,7 @@ func TestAcademicUnitService_ListUnitsByType(t *testing.T) {
 			}
 
 			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger())
-			_, err := svc.ListUnitsByType(context.Background(), tt.schoolID, tt.unitType, sharedrepo.ListFilters{})
+			_, _, err := svc.ListUnitsByType(context.Background(), tt.schoolID, tt.unitType, sharedrepo.ListFilters{})
 
 			if tt.wantErr {
 				require.Error(t, err)

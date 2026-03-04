@@ -173,8 +173,8 @@ func TestSchoolHandler_ListSchools(t *testing.T) {
 		{
 			name: "success - returns 200",
 			setupMock: func(m *mock.MockSchoolService) {
-				m.ListSchoolsFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]dto.SchoolResponse, error) {
-					return []dto.SchoolResponse{{ID: uuid.New().String(), Name: "School 1"}}, nil
+				m.ListSchoolsFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]dto.SchoolResponse, int, error) {
+					return []dto.SchoolResponse{{ID: uuid.New().String(), Name: "School 1"}}, 1, nil
 				}
 			},
 			wantStatus: http.StatusOK,
@@ -182,8 +182,8 @@ func TestSchoolHandler_ListSchools(t *testing.T) {
 		{
 			name: "error - database error returns 500",
 			setupMock: func(m *mock.MockSchoolService) {
-				m.ListSchoolsFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]dto.SchoolResponse, error) {
-					return nil, errors.NewDatabaseError("list", nil)
+				m.ListSchoolsFn = func(_ context.Context, _ sharedrepo.ListFilters) ([]dto.SchoolResponse, int, error) {
+					return nil, 0, errors.NewDatabaseError("list", nil)
 				}
 			},
 			wantStatus: http.StatusInternalServerError,

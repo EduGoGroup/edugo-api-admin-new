@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -35,8 +36,8 @@ func NewMembershipHandler(membershipService service.MembershipService, logger lo
 // @Router /memberships [post]
 func (h *MembershipHandler) CreateMembership(c *gin.Context) {
 	var req dto.CreateMembershipRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	m, err := h.membershipService.CreateMembership(c.Request.Context(), req)
@@ -53,7 +54,9 @@ func (h *MembershipHandler) CreateMembership(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param unit_id query string true "Unit ID"
-// @Success 200 {array} dto.MembershipResponse
+// @Param page query int false "Page number (1-based)" minimum(1)
+// @Param limit query int false "Number of items per page" minimum(1)
+// @Success 200 {object} dto.PaginatedResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -66,18 +69,38 @@ func (h *MembershipHandler) ListMembershipsByUnit(c *gin.Context) {
 		return
 	}
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "limit must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Limit = limit
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "page must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Page = page
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	memberships, err := h.membershipService.ListMembershipsByUnit(c.Request.Context(), unitID, filters)
+	memberships, total, err := h.membershipService.ListMembershipsByUnit(c.Request.Context(), unitID, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, memberships)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(memberships, total, page, filters.Limit))
 }
 
 // ListMembershipsByRole godoc
@@ -87,7 +110,9 @@ func (h *MembershipHandler) ListMembershipsByUnit(c *gin.Context) {
 // @Produce json
 // @Param unit_id query string true "Unit ID"
 // @Param role query string true "Role name"
-// @Success 200 {array} dto.MembershipResponse
+// @Param page query int false "Page number (1-based)" minimum(1)
+// @Param limit query int false "Number of items per page" minimum(1)
+// @Success 200 {object} dto.PaginatedResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -101,18 +126,38 @@ func (h *MembershipHandler) ListMembershipsByRole(c *gin.Context) {
 		return
 	}
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "limit must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Limit = limit
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "page must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Page = page
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	memberships, err := h.membershipService.ListMembershipsByRole(c.Request.Context(), unitID, role, filters)
+	memberships, total, err := h.membershipService.ListMembershipsByRole(c.Request.Context(), unitID, role, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, memberships)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(memberships, total, page, filters.Limit))
 }
 
 // GetMembership godoc
@@ -154,8 +199,8 @@ func (h *MembershipHandler) GetMembership(c *gin.Context) {
 func (h *MembershipHandler) UpdateMembership(c *gin.Context) {
 	id := c.Param("id")
 	var req dto.UpdateMembershipRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	m, err := h.membershipService.UpdateMembership(c.Request.Context(), id, req)
@@ -215,7 +260,10 @@ func (h *MembershipHandler) ExpireMembership(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param user_id path string true "User ID (UUID)"
-// @Success 200 {array} dto.MembershipResponse
+// @Param page query int false "Page number (1-based)" minimum(1)
+// @Param limit query int false "Number of items per page" minimum(1)
+// @Success 200 {object} dto.PaginatedResponse
+// @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
@@ -223,16 +271,36 @@ func (h *MembershipHandler) ExpireMembership(c *gin.Context) {
 func (h *MembershipHandler) ListMembershipsByUser(c *gin.Context) {
 	userID := c.Param("user_id")
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "limit must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Limit = limit
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "page must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Page = page
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	memberships, err := h.membershipService.ListMembershipsByUser(c.Request.Context(), userID, filters)
+	memberships, total, err := h.membershipService.ListMembershipsByUser(c.Request.Context(), userID, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, memberships)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(memberships, total, page, filters.Limit))
 }

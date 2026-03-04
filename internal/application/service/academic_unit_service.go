@@ -18,9 +18,9 @@ import (
 type AcademicUnitService interface {
 	CreateUnit(ctx context.Context, schoolID string, req dto.CreateAcademicUnitRequest) (*dto.AcademicUnitResponse, error)
 	GetUnit(ctx context.Context, id string) (*dto.AcademicUnitResponse, error)
-	ListUnitsBySchool(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, error)
+	ListUnitsBySchool(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, int, error)
 	GetUnitTree(ctx context.Context, schoolID string) ([]*dto.UnitTreeNode, error)
-	ListUnitsByType(ctx context.Context, schoolID, unitType string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, error)
+	ListUnitsByType(ctx context.Context, schoolID, unitType string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, int, error)
 	UpdateUnit(ctx context.Context, id string, req dto.UpdateAcademicUnitRequest) (*dto.AcademicUnitResponse, error)
 	DeleteUnit(ctx context.Context, id string) error
 	RestoreUnit(ctx context.Context, id string) (*dto.AcademicUnitResponse, error)
@@ -125,16 +125,16 @@ func (s *academicUnitService) GetUnit(ctx context.Context, id string) (*dto.Acad
 	return &response, nil
 }
 
-func (s *academicUnitService) ListUnitsBySchool(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, error) {
+func (s *academicUnitService) ListUnitsBySchool(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, int, error) {
 	sid, err := uuid.Parse(schoolID)
 	if err != nil {
-		return nil, errors.NewValidationError("invalid school ID")
+		return nil, 0, errors.NewValidationError("invalid school ID")
 	}
-	units, err := s.unitRepo.FindBySchoolID(ctx, sid, false, filters)
+	units, total, err := s.unitRepo.FindBySchoolID(ctx, sid, false, filters)
 	if err != nil {
-		return nil, errors.NewDatabaseError("list units", err)
+		return nil, 0, errors.NewDatabaseError("list units", err)
 	}
-	return dto.ToAcademicUnitResponseList(units), nil
+	return dto.ToAcademicUnitResponseList(units), total, nil
 }
 
 func (s *academicUnitService) GetUnitTree(ctx context.Context, schoolID string) ([]*dto.UnitTreeNode, error) {
@@ -142,26 +142,26 @@ func (s *academicUnitService) GetUnitTree(ctx context.Context, schoolID string) 
 	if err != nil {
 		return nil, errors.NewValidationError("invalid school ID")
 	}
-	units, err := s.unitRepo.FindBySchoolID(ctx, sid, false, sharedrepo.ListFilters{})
+	units, _, err := s.unitRepo.FindBySchoolID(ctx, sid, false, sharedrepo.ListFilters{})
 	if err != nil {
 		return nil, errors.NewDatabaseError("get unit tree", err)
 	}
 	return dto.BuildUnitTree(units), nil
 }
 
-func (s *academicUnitService) ListUnitsByType(ctx context.Context, schoolID, unitType string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, error) {
+func (s *academicUnitService) ListUnitsByType(ctx context.Context, schoolID, unitType string, filters sharedrepo.ListFilters) ([]dto.AcademicUnitResponse, int, error) {
 	sid, err := uuid.Parse(schoolID)
 	if err != nil {
-		return nil, errors.NewValidationError("invalid school ID")
+		return nil, 0, errors.NewValidationError("invalid school ID")
 	}
 	if unitType == "" {
-		return nil, errors.NewValidationError("type query parameter is required")
+		return nil, 0, errors.NewValidationError("type query parameter is required")
 	}
-	units, err := s.unitRepo.FindByType(ctx, sid, unitType, false, filters)
+	units, total, err := s.unitRepo.FindByType(ctx, sid, unitType, false, filters)
 	if err != nil {
-		return nil, errors.NewDatabaseError("list units by type", err)
+		return nil, 0, errors.NewDatabaseError("list units by type", err)
 	}
-	return dto.ToAcademicUnitResponseList(units), nil
+	return dto.ToAcademicUnitResponseList(units), total, nil
 }
 
 func (s *academicUnitService) UpdateUnit(ctx context.Context, id string, req dto.UpdateAcademicUnitRequest) (*dto.AcademicUnitResponse, error) {

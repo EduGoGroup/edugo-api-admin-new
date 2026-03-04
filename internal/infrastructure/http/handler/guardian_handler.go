@@ -33,8 +33,8 @@ func NewGuardianHandler(guardianService service.GuardianService, logger logger.L
 // @Router /guardian-relations [post]
 func (h *GuardianHandler) CreateGuardianRelation(c *gin.Context) {
 	var req dto.CreateGuardianRelationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	createdBy, _ := c.Get("user_id")
@@ -89,8 +89,8 @@ func (h *GuardianHandler) GetGuardianRelation(c *gin.Context) {
 func (h *GuardianHandler) UpdateGuardianRelation(c *gin.Context) {
 	id := c.Param("id")
 	var req dto.UpdateGuardianRelationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	relation, err := h.guardianService.UpdateRelation(c.Request.Context(), id, req)

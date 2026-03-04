@@ -12,7 +12,7 @@ import (
 type SubjectRepository interface {
 	Create(ctx context.Context, subject *entities.Subject) error
 	FindByID(ctx context.Context, id uuid.UUID) (*entities.Subject, error)
-	FindBySchoolID(ctx context.Context, schoolID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Subject, error)
+	FindBySchoolID(ctx context.Context, schoolID uuid.UUID, filters sharedrepo.ListFilters) ([]*entities.Subject, int, error)
 	Update(ctx context.Context, subject *entities.Subject) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	List(ctx context.Context, filters sharedrepo.ListFilters) ([]*entities.Subject, error)

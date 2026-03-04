@@ -17,7 +17,7 @@ import (
 type SubjectService interface {
 	CreateSubject(ctx context.Context, schoolID string, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error)
 	GetSubject(ctx context.Context, id string) (*dto.SubjectResponse, error)
-	ListSubjects(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error)
+	ListSubjects(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, int, error)
 	UpdateSubject(ctx context.Context, id string, req dto.UpdateSubjectRequest) (*dto.SubjectResponse, error)
 	DeleteSubject(ctx context.Context, id string) error
 }
@@ -98,16 +98,16 @@ func (s *subjectService) GetSubject(ctx context.Context, id string) (*dto.Subjec
 	return &response, nil
 }
 
-func (s *subjectService) ListSubjects(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, error) {
+func (s *subjectService) ListSubjects(ctx context.Context, schoolID string, filters sharedrepo.ListFilters) ([]dto.SubjectResponse, int, error) {
 	schoolUUID, err := uuid.Parse(schoolID)
 	if err != nil {
-		return nil, errors.NewValidationError("invalid school ID")
+		return nil, 0, errors.NewValidationError("invalid school ID")
 	}
-	subjects, err := s.subjectRepo.FindBySchoolID(ctx, schoolUUID, filters)
+	subjects, total, err := s.subjectRepo.FindBySchoolID(ctx, schoolUUID, filters)
 	if err != nil {
-		return nil, errors.NewDatabaseError("list subjects", err)
+		return nil, 0, errors.NewDatabaseError("list subjects", err)
 	}
-	return dto.ToSubjectResponseList(subjects), nil
+	return dto.ToSubjectResponseList(subjects), total, nil
 }
 
 func (s *subjectService) UpdateSubject(ctx context.Context, id string, req dto.UpdateSubjectRequest) (*dto.SubjectResponse, error) {
