@@ -1,6 +1,6 @@
 module github.com/EduGoGroup/edugo-api-admin-new
 
-go 1.25.0
+go 1.25
 
 require (
 	github.com/EduGoGroup/edugo-infrastructure/postgres v0.58.0

@@ -75,14 +75,16 @@ func (s *userService) CreateUser(ctx context.Context, req dto.CreateUserRequest)
 
 	s.logger.Info("entity created", "entity_type", "user", "entity_id", user.ID.String(), "email", user.Email)
 
-	_ = s.auditLogger.Log(ctx, audit.AuditEvent{
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action:       "create",
 		ResourceType: "user",
 		ResourceID:   user.ID.String(),
 		Severity:     audit.SeverityCritical,
 		Category:     audit.CategoryAdmin,
 		Metadata:     map[string]interface{}{"email": user.Email},
-	})
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "action", "create", "entity_type", "user", "entity_id", user.ID.String(), "error", err)
+	}
 
 	return dto.ToUserResponse(user), nil
 }
@@ -163,13 +165,15 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 	}
 	s.logger.Info("entity deleted", "entity_type", "user", "entity_id", id)
 
-	_ = s.auditLogger.Log(ctx, audit.AuditEvent{
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action:       "delete",
 		ResourceType: "user",
 		ResourceID:   id,
 		Severity:     audit.SeverityCritical,
 		Category:     audit.CategoryAdmin,
-	})
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "action", "delete", "entity_type", "user", "entity_id", id, "error", err)
+	}
 
 	return nil
 }

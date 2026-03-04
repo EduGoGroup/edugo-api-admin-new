@@ -69,14 +69,16 @@ func (s *membershipService) CreateMembership(ctx context.Context, req dto.Create
 
 	s.logger.Info("entity created", "entity_type", "membership", "entity_id", membership.ID.String())
 
-	_ = s.auditLogger.Log(ctx, audit.AuditEvent{
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action:       "create",
 		ResourceType: "membership",
 		ResourceID:   membership.ID.String(),
 		Severity:     audit.SeverityWarning,
 		Category:     audit.CategoryData,
 		Metadata:     map[string]interface{}{"role": membership.Role, "user_id": membership.UserID.String()},
-	})
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "action", "create", "entity_type", "membership", "entity_id", membership.ID.String(), "error", err)
+	}
 
 	response := dto.ToMembershipResponse(membership)
 	return &response, nil
@@ -158,13 +160,15 @@ func (s *membershipService) UpdateMembership(ctx context.Context, id string, req
 
 	s.logger.Info("entity updated", "entity_type", "membership", "entity_id", id)
 
-	_ = s.auditLogger.Log(ctx, audit.AuditEvent{
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action:       "update",
 		ResourceType: "membership",
 		ResourceID:   id,
 		Severity:     audit.SeverityWarning,
 		Category:     audit.CategoryData,
-	})
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "action", "update", "entity_type", "membership", "entity_id", id, "error", err)
+	}
 
 	response := dto.ToMembershipResponse(m)
 	return &response, nil
@@ -187,13 +191,15 @@ func (s *membershipService) DeleteMembership(ctx context.Context, id string) err
 	}
 	s.logger.Info("entity deleted", "entity_type", "membership", "entity_id", id)
 
-	_ = s.auditLogger.Log(ctx, audit.AuditEvent{
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action:       "delete",
 		ResourceType: "membership",
 		ResourceID:   id,
 		Severity:     audit.SeverityWarning,
 		Category:     audit.CategoryData,
-	})
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "action", "delete", "entity_type", "membership", "entity_id", id, "error", err)
+	}
 
 	return nil
 }

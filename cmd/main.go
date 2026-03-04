@@ -23,7 +23,6 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/container"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/middleware"
-	auditpostgres "github.com/EduGoGroup/edugo-shared/audit/postgres"
 	"github.com/EduGoGroup/edugo-shared/common/types/enum"
 	"github.com/EduGoGroup/edugo-shared/logger"
 	ginmiddleware "github.com/EduGoGroup/edugo-shared/middleware/gin"
@@ -118,8 +117,7 @@ func main() {
 	// ==================== PROTECTED ROUTES (JWT required) ====================
 	v1 := r.Group("/api/v1")
 	v1.Use(middleware.RemoteAuthMiddleware(cont.AuthClient))
-	auditLogger := auditpostgres.NewPostgresAuditLogger(cont.DB, "admin-api")
-	v1.Use(ginmiddleware.AuditMiddleware(auditLogger))
+	v1.Use(ginmiddleware.AuditMiddleware(cont.AuditLogger))
 	{
 		// Schools
 		schools := v1.Group("/schools")
