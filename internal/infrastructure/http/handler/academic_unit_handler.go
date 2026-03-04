@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -40,8 +41,8 @@ func NewAcademicUnitHandler(unitService service.AcademicUnitService, logger logg
 func (h *AcademicUnitHandler) CreateUnit(c *gin.Context) {
 	schoolID := c.Param("id")
 	var req dto.CreateAcademicUnitRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	unit, err := h.unitService.CreateUnit(c.Request.Context(), schoolID, req)
@@ -58,7 +59,12 @@ func (h *AcademicUnitHandler) CreateUnit(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "School ID (UUID)"
-// @Success 200 {array} dto.AcademicUnitResponse
+// @Param page query int false "Page number (1-based)" minimum(1)
+// @Param limit query int false "Number of items per page" minimum(1)
+// @Param search query string false "Search term (ILIKE)"
+// @Param search_fields query string false "Comma-separated fields to search"
+// @Success 200 {object} dto.PaginatedResponse
+// @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -67,18 +73,38 @@ func (h *AcademicUnitHandler) CreateUnit(c *gin.Context) {
 func (h *AcademicUnitHandler) ListUnitsBySchool(c *gin.Context) {
 	schoolID := c.Param("id")
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "limit must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Limit = limit
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "page must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Page = page
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	units, err := h.unitService.ListUnitsBySchool(c.Request.Context(), schoolID, filters)
+	units, total, err := h.unitService.ListUnitsBySchool(c.Request.Context(), schoolID, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, units)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(units, total, page, filters.Limit))
 }
 
 // GetUnitTree godoc
@@ -110,7 +136,12 @@ func (h *AcademicUnitHandler) GetUnitTree(c *gin.Context) {
 // @Produce json
 // @Param id path string true "School ID (UUID)"
 // @Param type query string false "Unit type filter"
-// @Success 200 {array} dto.AcademicUnitResponse
+// @Param page query int false "Page number (1-based)" minimum(1)
+// @Param limit query int false "Number of items per page" minimum(1)
+// @Param search query string false "Search term (ILIKE)"
+// @Param search_fields query string false "Comma-separated fields to search"
+// @Success 200 {object} dto.PaginatedResponse
+// @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -120,18 +151,38 @@ func (h *AcademicUnitHandler) ListUnitsByType(c *gin.Context) {
 	schoolID := c.Param("id")
 	unitType := c.Query("type")
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "limit must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Limit = limit
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "page must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Page = page
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	units, err := h.unitService.ListUnitsByType(c.Request.Context(), schoolID, unitType, filters)
+	units, total, err := h.unitService.ListUnitsByType(c.Request.Context(), schoolID, unitType, filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, units)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(units, total, page, filters.Limit))
 }
 
 // GetUnit godoc
@@ -173,8 +224,8 @@ func (h *AcademicUnitHandler) GetUnit(c *gin.Context) {
 func (h *AcademicUnitHandler) UpdateUnit(c *gin.Context) {
 	id := c.Param("id")
 	var req dto.UpdateAcademicUnitRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	unit, err := h.unitService.UpdateUnit(c.Request.Context(), id, req)

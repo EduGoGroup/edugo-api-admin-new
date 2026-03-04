@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -37,8 +38,8 @@ func NewSchoolHandler(schoolService service.SchoolService, logger logger.Logger)
 // @Router /schools [post]
 func (h *SchoolHandler) CreateSchool(c *gin.Context) {
 	var req dto.CreateSchoolRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	school, err := h.schoolService.CreateSchool(c.Request.Context(), req)
@@ -108,27 +109,50 @@ func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 // @Tags schools
 // @Accept json
 // @Produce json
+// @Param page query int false "Page number (1-based)" minimum(1)
+// @Param limit query int false "Number of items per page" minimum(1)
 // @Param search query string false "Search term (ILIKE)"
 // @Param search_fields query string false "Comma-separated fields to search"
-// @Success 200 {array} dto.SchoolResponse
+// @Success 200 {object} dto.PaginatedResponse
+// @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /schools [get]
 func (h *SchoolHandler) ListSchools(c *gin.Context) {
 	var filters sharedrepo.ListFilters
+	if limitStr := c.Query("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "limit must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Limit = limit
+	}
+	if pageStr := c.Query("page"); pageStr != "" {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "page must be a positive integer", Code: "INVALID_REQUEST"})
+			return
+		}
+		filters.Page = page
+	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
 		if fields := c.Query("search_fields"); fields != "" {
 			filters.SearchFields = strings.Split(fields, ",")
 		}
 	}
-	schools, err := h.schoolService.ListSchools(c.Request.Context(), filters)
+	schools, total, err := h.schoolService.ListSchools(c.Request.Context(), filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, schools)
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(schools, total, page, filters.Limit))
 }
 
 // UpdateSchool godoc
@@ -152,8 +176,8 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 		return
 	}
 	var req dto.UpdateSchoolRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	school, err := h.schoolService.UpdateSchool(c.Request.Context(), id, req)

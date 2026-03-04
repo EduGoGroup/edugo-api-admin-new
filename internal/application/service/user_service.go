@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
@@ -17,7 +19,7 @@ import (
 type UserService interface {
 	CreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.UserResponse, error)
 	GetUser(ctx context.Context, id string) (*dto.UserResponse, error)
-	ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, error)
+	ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, int, error)
 	UpdateUser(ctx context.Context, id string, req dto.UpdateUserRequest) (*dto.UserResponse, error)
 	DeleteUser(ctx context.Context, id string) error
 }
@@ -47,13 +49,20 @@ func (s *userService) CreateUser(ctx context.Context, req dto.CreateUserRequest)
 	}
 
 	now := time.Now()
+
+	// Usamos nuestra función flexible para parsear el estado
+	isActive, err := parseFlexibleBool(req.IsActive, true)
+	if err != nil {
+		return nil, errors.NewValidationError("invalid is_active value: " + err.Error())
+	}
+
 	user := &entities.User{
 		ID:           uuid.New(),
 		Email:        req.Email,
 		PasswordHash: hashedPassword,
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
-		IsActive:     true,
+		IsActive:     isActive,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
@@ -81,12 +90,12 @@ func (s *userService) GetUser(ctx context.Context, id string) (*dto.UserResponse
 	return dto.ToUserResponse(user), nil
 }
 
-func (s *userService) ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, error) {
-	users, err := s.userRepo.List(ctx, filters)
+func (s *userService) ListUsers(ctx context.Context, filters sharedrepo.ListFilters) ([]*dto.UserResponse, int, error) {
+	users, total, err := s.userRepo.List(ctx, filters)
 	if err != nil {
-		return nil, errors.NewDatabaseError("list users", err)
+		return nil, 0, errors.NewDatabaseError("list users", err)
 	}
-	return dto.ToUserResponseList(users), nil
+	return dto.ToUserResponseList(users), int(total), nil
 }
 
 func (s *userService) UpdateUser(ctx context.Context, id string, req dto.UpdateUserRequest) (*dto.UserResponse, error) {
@@ -109,7 +118,11 @@ func (s *userService) UpdateUser(ctx context.Context, id string, req dto.UpdateU
 		user.LastName = *req.LastName
 	}
 	if req.IsActive != nil {
-		user.IsActive = *req.IsActive
+		isActive, err := parseFlexibleBool(req.IsActive, user.IsActive)
+		if err != nil {
+			return nil, errors.NewValidationError("invalid is_active value: " + err.Error())
+		}
+		user.IsActive = isActive
 	}
 
 	user.UpdatedAt = time.Now()
@@ -138,4 +151,35 @@ func (s *userService) DeleteUser(ctx context.Context, id string) error {
 	}
 	s.logger.Info("entity deleted", "entity_type", "user", "entity_id", id)
 	return nil
+}
+
+// parseFlexibleBool converts a bool or string value to a boolean.
+// Returns an error for unrecognized string values.
+func parseFlexibleBool(val interface{}, defaultVal bool) (bool, error) {
+	if val == nil {
+		return defaultVal, nil
+	}
+	switch v := val.(type) {
+	case bool:
+		return v, nil
+	case string:
+		switch strings.ToLower(strings.TrimSpace(v)) {
+		case "true", "1", "yes":
+			return true, nil
+		case "false", "0", "no":
+			return false, nil
+		default:
+			return false, fmt.Errorf("invalid boolean value: %q (accepted: true/false, 1/0, yes/no)", v)
+		}
+	default:
+		strVal := fmt.Sprintf("%v", v)
+		switch strings.ToLower(strings.TrimSpace(strVal)) {
+		case "true", "1", "yes":
+			return true, nil
+		case "false", "0", "no":
+			return false, nil
+		default:
+			return false, fmt.Errorf("invalid boolean value: %q (accepted: true/false, 1/0, yes/no)", strVal)
+		}
+	}
 }

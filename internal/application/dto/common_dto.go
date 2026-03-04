@@ -26,3 +26,23 @@ type PaginationMeta struct {
 	Total      int `json:"total"`
 	TotalPages int `json:"total_pages"`
 }
+
+// NewPaginatedResponse creates a PaginatedResponse from data, total count, and filter params.
+func NewPaginatedResponse(data interface{}, total, page, limit int) PaginatedResponse {
+	if page < 1 {
+		page = 1
+	}
+	totalPages := 0
+	if limit > 0 {
+		totalPages = (total + limit - 1) / limit
+	}
+	return PaginatedResponse{
+		Data: data,
+		Pagination: PaginationMeta{
+			Page:       page,
+			PerPage:    limit,
+			Total:      total,
+			TotalPages: totalPages,
+		},
+	}
+}

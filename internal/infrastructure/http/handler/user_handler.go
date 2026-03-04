@@ -39,8 +39,8 @@ func NewUserHandler(userService service.UserService, logger logger.Logger) *User
 // @Router /users [post]
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req dto.CreateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	user, err := h.userService.CreateUser(c.Request.Context(), req)
@@ -57,11 +57,12 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param is_active query bool false "Filter by active status"
-// @Param limit query int false "Limit results"
-// @Param offset query int false "Offset results"
+// @Param page query int false "Page number (1-based)" minimum(1)
+// @Param limit query int false "Number of items per page" minimum(1)
 // @Param search query string false "Search term (ILIKE)"
 // @Param search_fields query string false "Comma-separated fields to search"
-// @Success 200 {array} dto.UserResponse
+// @Success 200 {object} dto.PaginatedResponse
+// @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
@@ -79,19 +80,19 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	}
 	if limitStr := c.Query("limit"); limitStr != "" {
 		limit, err := strconv.Atoi(limitStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid limit parameter", Code: "INVALID_REQUEST"})
+		if err != nil || limit <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "limit must be a positive integer", Code: "INVALID_REQUEST"})
 			return
 		}
 		filters.Limit = limit
 	}
-	if offsetStr := c.Query("offset"); offsetStr != "" {
-		offset, err := strconv.Atoi(offsetStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid offset parameter", Code: "INVALID_REQUEST"})
+	if pageStr := c.Query("page"); pageStr != "" {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page <= 0 {
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "page must be a positive integer", Code: "INVALID_REQUEST"})
 			return
 		}
-		filters.Offset = offset
+		filters.Page = page
 	}
 	if search := c.Query("search"); search != "" {
 		filters.Search = search
@@ -100,12 +101,17 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 		}
 	}
 
-	users, err := h.userService.ListUsers(c.Request.Context(), filters)
+	users, total, err := h.userService.ListUsers(c.Request.Context(), filters)
 	if err != nil {
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, users)
+
+	page := filters.Page
+	if page < 1 {
+		page = 1
+	}
+	c.JSON(http.StatusOK, dto.NewPaginatedResponse(users, total, page, filters.Limit))
 }
 
 // GetUser godoc
@@ -156,8 +162,8 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 	var req dto.UpdateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body", Code: "INVALID_REQUEST"})
+	if err := bindJSON(c, &req); err != nil {
+		_ = c.Error(err)
 		return
 	}
 	user, err := h.userService.UpdateUser(c.Request.Context(), id, req)

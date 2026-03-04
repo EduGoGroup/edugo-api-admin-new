@@ -16,9 +16,9 @@ import (
 type MembershipService interface {
 	CreateMembership(ctx context.Context, req dto.CreateMembershipRequest) (*dto.MembershipResponse, error)
 	GetMembership(ctx context.Context, id string) (*dto.MembershipResponse, error)
-	ListMembershipsByUnit(ctx context.Context, unitID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error)
-	ListMembershipsByRole(ctx context.Context, unitID, role string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error)
-	ListMembershipsByUser(ctx context.Context, userID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error)
+	ListMembershipsByUnit(ctx context.Context, unitID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, int, error)
+	ListMembershipsByRole(ctx context.Context, unitID, role string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, int, error)
+	ListMembershipsByUser(ctx context.Context, userID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, int, error)
 	UpdateMembership(ctx context.Context, id string, req dto.UpdateMembershipRequest) (*dto.MembershipResponse, error)
 	DeleteMembership(ctx context.Context, id string) error
 	ExpireMembership(ctx context.Context, id string) (*dto.MembershipResponse, error)
@@ -86,40 +86,40 @@ func (s *membershipService) GetMembership(ctx context.Context, id string) (*dto.
 	return &response, nil
 }
 
-func (s *membershipService) ListMembershipsByUnit(ctx context.Context, unitID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error) {
+func (s *membershipService) ListMembershipsByUnit(ctx context.Context, unitID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, int, error) {
 	uid, err := uuid.Parse(unitID)
 	if err != nil {
-		return nil, errors.NewValidationError("invalid unit_id")
+		return nil, 0, errors.NewValidationError("invalid unit_id")
 	}
-	memberships, err := s.membershipRepo.FindByUnit(ctx, uid, filters)
+	memberships, total, err := s.membershipRepo.FindByUnit(ctx, uid, filters)
 	if err != nil {
-		return nil, errors.NewDatabaseError("list memberships", err)
+		return nil, 0, errors.NewDatabaseError("list memberships", err)
 	}
-	return dto.ToMembershipResponseList(memberships), nil
+	return dto.ToMembershipResponseList(memberships), int(total), nil
 }
 
-func (s *membershipService) ListMembershipsByRole(ctx context.Context, unitID, role string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error) {
+func (s *membershipService) ListMembershipsByRole(ctx context.Context, unitID, role string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, int, error) {
 	uid, err := uuid.Parse(unitID)
 	if err != nil {
-		return nil, errors.NewValidationError("invalid unit_id")
+		return nil, 0, errors.NewValidationError("invalid unit_id")
 	}
-	memberships, err := s.membershipRepo.FindByUnitAndRole(ctx, uid, role, true, filters)
+	memberships, total, err := s.membershipRepo.FindByUnitAndRole(ctx, uid, role, true, filters)
 	if err != nil {
-		return nil, errors.NewDatabaseError("list memberships by role", err)
+		return nil, 0, errors.NewDatabaseError("list memberships by role", err)
 	}
-	return dto.ToMembershipResponseList(memberships), nil
+	return dto.ToMembershipResponseList(memberships), int(total), nil
 }
 
-func (s *membershipService) ListMembershipsByUser(ctx context.Context, userID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, error) {
+func (s *membershipService) ListMembershipsByUser(ctx context.Context, userID string, filters sharedrepo.ListFilters) ([]dto.MembershipResponse, int, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
-		return nil, errors.NewValidationError("invalid user_id")
+		return nil, 0, errors.NewValidationError("invalid user_id")
 	}
-	memberships, err := s.membershipRepo.FindByUser(ctx, uid, filters)
+	memberships, total, err := s.membershipRepo.FindByUser(ctx, uid, filters)
 	if err != nil {
-		return nil, errors.NewDatabaseError("list user memberships", err)
+		return nil, 0, errors.NewDatabaseError("list user memberships", err)
 	}
-	return dto.ToMembershipResponseList(memberships), nil
+	return dto.ToMembershipResponseList(memberships), int(total), nil
 }
 
 func (s *membershipService) UpdateMembership(ctx context.Context, id string, req dto.UpdateMembershipRequest) (*dto.MembershipResponse, error) {
