@@ -23,6 +23,7 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/container"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/middleware"
+	"github.com/EduGoGroup/edugo-shared/audit"
 	"github.com/EduGoGroup/edugo-shared/common/types/enum"
 	"github.com/EduGoGroup/edugo-shared/logger"
 	ginmiddleware "github.com/EduGoGroup/edugo-shared/middleware/gin"
@@ -117,6 +118,8 @@ func main() {
 	// ==================== PROTECTED ROUTES (JWT required) ====================
 	v1 := r.Group("/api/v1")
 	v1.Use(middleware.RemoteAuthMiddleware(cont.AuthClient))
+	auditLogger := audit.NewPostgresAuditLogger(cont.DB, "admin-api")
+	v1.Use(ginmiddleware.AuditMiddleware(auditLogger))
 	{
 		// Schools
 		schools := v1.Group("/schools")
@@ -150,13 +153,13 @@ func main() {
 		// Memberships
 		memberships := v1.Group("/memberships")
 		{
-			memberships.POST("", cont.MembershipHandler.CreateMembership)
-			memberships.GET("", cont.MembershipHandler.ListMembershipsByUnit)
-			memberships.GET("/by-role", cont.MembershipHandler.ListMembershipsByRole)
-			memberships.GET("/:id", cont.MembershipHandler.GetMembership)
-			memberships.PUT("/:id", cont.MembershipHandler.UpdateMembership)
-			memberships.DELETE("/:id", cont.MembershipHandler.DeleteMembership)
-			memberships.POST("/:id/expire", cont.MembershipHandler.ExpireMembership)
+			memberships.POST("", ginmiddleware.RequirePermission(enum.PermissionMembershipsCreate), cont.MembershipHandler.CreateMembership)
+			memberships.GET("", ginmiddleware.RequirePermission(enum.PermissionMembershipsRead), cont.MembershipHandler.ListMembershipsByUnit)
+			memberships.GET("/by-role", ginmiddleware.RequirePermission(enum.PermissionMembershipsRead), cont.MembershipHandler.ListMembershipsByRole)
+			memberships.GET("/:id", ginmiddleware.RequirePermission(enum.PermissionMembershipsRead), cont.MembershipHandler.GetMembership)
+			memberships.PUT("/:id", ginmiddleware.RequirePermission(enum.PermissionMembershipsUpdate), cont.MembershipHandler.UpdateMembership)
+			memberships.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionMembershipsDelete), cont.MembershipHandler.DeleteMembership)
+			memberships.POST("/:id/expire", ginmiddleware.RequirePermission(enum.PermissionMembershipsUpdate), cont.MembershipHandler.ExpireMembership)
 		}
 
 		// Users CRUD
@@ -192,20 +195,20 @@ func main() {
 		// Subjects
 		subjects := v1.Group("/subjects")
 		{
-			subjects.POST("", cont.SubjectHandler.CreateSubject)
-			subjects.GET("", cont.SubjectHandler.ListSubjects)
-			subjects.GET("/:id", cont.SubjectHandler.GetSubject)
-			subjects.PATCH("/:id", cont.SubjectHandler.UpdateSubject)
-			subjects.DELETE("/:id", cont.SubjectHandler.DeleteSubject)
+			subjects.POST("", ginmiddleware.RequirePermission(enum.PermissionSubjectsCreate), cont.SubjectHandler.CreateSubject)
+			subjects.GET("", ginmiddleware.RequirePermission(enum.PermissionSubjectsRead), cont.SubjectHandler.ListSubjects)
+			subjects.GET("/:id", ginmiddleware.RequirePermission(enum.PermissionSubjectsRead), cont.SubjectHandler.GetSubject)
+			subjects.PATCH("/:id", ginmiddleware.RequirePermission(enum.PermissionSubjectsUpdate), cont.SubjectHandler.UpdateSubject)
+			subjects.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionSubjectsDelete), cont.SubjectHandler.DeleteSubject)
 		}
 
 		// Guardian Relations
 		guardianRelations := v1.Group("/guardian-relations")
 		{
-			guardianRelations.POST("", cont.GuardianHandler.CreateGuardianRelation)
-			guardianRelations.GET("/:id", cont.GuardianHandler.GetGuardianRelation)
-			guardianRelations.PUT("/:id", cont.GuardianHandler.UpdateGuardianRelation)
-			guardianRelations.DELETE("/:id", cont.GuardianHandler.DeleteGuardianRelation)
+			guardianRelations.POST("", ginmiddleware.RequirePermission(enum.PermissionGuardianRelationsManage), cont.GuardianHandler.CreateGuardianRelation)
+			guardianRelations.GET("/:id", ginmiddleware.RequirePermission(enum.PermissionGuardianRelationsRead), cont.GuardianHandler.GetGuardianRelation)
+			guardianRelations.PUT("/:id", ginmiddleware.RequirePermission(enum.PermissionGuardianRelationsManage), cont.GuardianHandler.UpdateGuardianRelation)
+			guardianRelations.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionGuardianRelationsManage), cont.GuardianHandler.DeleteGuardianRelation)
 		}
 		guardians := v1.Group("/guardians")
 		{

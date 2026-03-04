@@ -6,6 +6,7 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	"github.com/EduGoGroup/edugo-shared/audit"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
 	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
@@ -27,11 +28,12 @@ type MembershipService interface {
 type membershipService struct {
 	membershipRepo sharedrepo.MembershipRepository
 	logger         logger.Logger
+	auditLogger    audit.AuditLogger
 }
 
 // NewMembershipService creates a new membership service
-func NewMembershipService(membershipRepo sharedrepo.MembershipRepository, logger logger.Logger) MembershipService {
-	return &membershipService{membershipRepo: membershipRepo, logger: logger}
+func NewMembershipService(membershipRepo sharedrepo.MembershipRepository, logger logger.Logger, auditLogger audit.AuditLogger) MembershipService {
+	return &membershipService{membershipRepo: membershipRepo, logger: logger, auditLogger: auditLogger}
 }
 
 func (s *membershipService) CreateMembership(ctx context.Context, req dto.CreateMembershipRequest) (*dto.MembershipResponse, error) {
@@ -66,6 +68,16 @@ func (s *membershipService) CreateMembership(ctx context.Context, req dto.Create
 	}
 
 	s.logger.Info("entity created", "entity_type", "membership", "entity_id", membership.ID.String())
+
+	_ = s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action:       "create",
+		ResourceType: "membership",
+		ResourceID:   membership.ID.String(),
+		Severity:     audit.SeverityWarning,
+		Category:     audit.CategoryData,
+		Metadata:     map[string]interface{}{"role": membership.Role, "user_id": membership.UserID.String()},
+	})
+
 	response := dto.ToMembershipResponse(membership)
 	return &response, nil
 }
@@ -145,6 +157,15 @@ func (s *membershipService) UpdateMembership(ctx context.Context, id string, req
 	}
 
 	s.logger.Info("entity updated", "entity_type", "membership", "entity_id", id)
+
+	_ = s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action:       "update",
+		ResourceType: "membership",
+		ResourceID:   id,
+		Severity:     audit.SeverityWarning,
+		Category:     audit.CategoryData,
+	})
+
 	response := dto.ToMembershipResponse(m)
 	return &response, nil
 }
@@ -165,6 +186,15 @@ func (s *membershipService) DeleteMembership(ctx context.Context, id string) err
 		return errors.NewDatabaseError("delete membership", err)
 	}
 	s.logger.Info("entity deleted", "entity_type", "membership", "entity_id", id)
+
+	_ = s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action:       "delete",
+		ResourceType: "membership",
+		ResourceID:   id,
+		Severity:     audit.SeverityWarning,
+		Category:     audit.CategoryData,
+	})
+
 	return nil
 }
 

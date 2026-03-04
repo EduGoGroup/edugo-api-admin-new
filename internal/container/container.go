@@ -6,6 +6,7 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/handler"
 	pgRepo "github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/persistence/postgres/repository"
+	"github.com/EduGoGroup/edugo-shared/audit"
 	"github.com/EduGoGroup/edugo-shared/logger"
 	sharedrepopg "github.com/EduGoGroup/edugo-shared/repository"
 	"gorm.io/gorm"
@@ -69,13 +70,16 @@ func NewContainer(db *gorm.DB, log logger.Logger, cfg *config.Config) *Container
 	statsRepo := pgRepo.NewPostgresStatsRepository(db)
 	materialRepo := pgRepo.NewPostgresMaterialRepository(db)
 
+	// Audit logger
+	auditLogger := audit.NewPostgresAuditLogger(db, "admin-api")
+
 	// Services
 	schoolService := service.NewSchoolService(schoolRepo, log, cfg.Defaults.School)
 	unitService := service.NewAcademicUnitService(unitRepo, schoolRepo, log)
-	membershipService := service.NewMembershipService(membershipRepo, log)
+	membershipService := service.NewMembershipService(membershipRepo, log, auditLogger)
 	subjectService := service.NewSubjectService(subjectRepo, log)
 	guardianService := service.NewGuardianService(guardianRepo, log)
-	userService := service.NewUserService(userRepo, log)
+	userService := service.NewUserService(userRepo, log, auditLogger)
 	statsService := service.NewStatsService(statsRepo, log)
 	materialService := service.NewMaterialService(materialRepo, log)
 
