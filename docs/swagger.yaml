@@ -123,6 +123,7 @@ definitions:
         type: string
       first_name:
         type: string
+      is_active: {}
       last_name:
         type: string
       password:
@@ -197,6 +198,23 @@ definitions:
         type: string
       withdrawn_at:
         type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginatedResponse:
+    properties:
+      data: {}
+      pagination:
+        $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginationMeta'
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginationMeta:
+    properties:
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
     type: object
   github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse:
     properties:
@@ -316,8 +334,7 @@ definitions:
     properties:
       first_name:
         type: string
-      is_active:
-        type: boolean
+      is_active: {}
       last_name:
         type: string
     type: object
@@ -583,15 +600,23 @@ paths:
         name: unit_id
         required: true
         type: string
+      - description: Page number (1-based)
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        minimum: 1
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
-            type: array
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginatedResponse'
         "400":
           description: Bad Request
           schema:
@@ -800,15 +825,23 @@ paths:
         name: role
         required: true
         type: string
+      - description: Page number (1-based)
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        minimum: 1
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
-            type: array
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginatedResponse'
         "400":
           description: Bad Request
           schema:
@@ -831,6 +864,16 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: Page number (1-based)
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        minimum: 1
+        name: limit
+        type: integer
       - description: Search term (ILIKE)
         in: query
         name: search
@@ -845,9 +888,11 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse'
-            type: array
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1021,15 +1066,35 @@ paths:
         name: id
         required: true
         type: string
+      - description: Page number (1-based)
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Search term (ILIKE)
+        in: query
+        name: search
+        type: string
+      - description: Comma-separated fields to search
+        in: query
+        name: search_fields
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
-            type: array
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1104,15 +1169,35 @@ paths:
         in: query
         name: type
         type: string
+      - description: Page number (1-based)
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Search term (ILIKE)
+        in: query
+        name: search
+        type: string
+      - description: Comma-separated fields to search
+        in: query
+        name: search_fields
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.AcademicUnitResponse'
-            type: array
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1263,6 +1348,16 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: Page number (1-based)
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        minimum: 1
+        name: limit
+        type: integer
       - description: Search term (ILIKE)
         in: query
         name: search
@@ -1277,9 +1372,11 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SubjectResponse'
-            type: array
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1638,13 +1735,15 @@ paths:
         in: query
         name: is_active
         type: boolean
-      - description: Limit results
+      - description: Page number (1-based)
         in: query
-        name: limit
+        minimum: 1
+        name: page
         type: integer
-      - description: Offset results
+      - description: Number of items per page
         in: query
-        name: offset
+        minimum: 1
+        name: limit
         type: integer
       - description: Search term (ILIKE)
         in: query
@@ -1660,9 +1759,11 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UserResponse'
-            type: array
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
@@ -1840,15 +1941,27 @@ paths:
         name: user_id
         required: true
         type: string
+      - description: Page number (1-based)
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        minimum: 1
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.MembershipResponse'
-            type: array
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
