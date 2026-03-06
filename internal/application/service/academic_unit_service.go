@@ -8,6 +8,7 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	"github.com/EduGoGroup/edugo-shared/audit"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
 	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
@@ -28,14 +29,15 @@ type AcademicUnitService interface {
 }
 
 type academicUnitService struct {
-	unitRepo   repository.AcademicUnitRepository
-	schoolRepo sharedrepo.SchoolRepository
-	logger     logger.Logger
+	unitRepo    repository.AcademicUnitRepository
+	schoolRepo  sharedrepo.SchoolRepository
+	logger      logger.Logger
+	auditLogger audit.AuditLogger
 }
 
 // NewAcademicUnitService creates a new academic unit service
-func NewAcademicUnitService(unitRepo repository.AcademicUnitRepository, schoolRepo sharedrepo.SchoolRepository, logger logger.Logger) AcademicUnitService {
-	return &academicUnitService{unitRepo: unitRepo, schoolRepo: schoolRepo, logger: logger}
+func NewAcademicUnitService(unitRepo repository.AcademicUnitRepository, schoolRepo sharedrepo.SchoolRepository, logger logger.Logger, auditLogger audit.AuditLogger) AcademicUnitService {
+	return &academicUnitService{unitRepo: unitRepo, schoolRepo: schoolRepo, logger: logger, auditLogger: auditLogger}
 }
 
 func (s *academicUnitService) CreateUnit(ctx context.Context, schoolID string, req dto.CreateAcademicUnitRequest) (*dto.AcademicUnitResponse, error) {
@@ -101,10 +103,18 @@ func (s *academicUnitService) CreateUnit(ctx context.Context, schoolID string, r
 	}
 
 	if err := s.unitRepo.Create(ctx, unit); err != nil {
+		s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "create", ResourceType: "academic_unit",
+			ErrorMessage: err.Error(), Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
+		})
 		return nil, errors.NewDatabaseError("create academic unit", err)
 	}
 
 	s.logger.Info("entity created", "entity_type", "academic_unit", "entity_id", unit.ID.String())
+	s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "create", ResourceType: "academic_unit", ResourceID: unit.ID.String(),
+		Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
+	})
 	response := dto.ToAcademicUnitResponse(unit)
 	return &response, nil
 }
@@ -222,9 +232,17 @@ func (s *academicUnitService) DeleteUnit(ctx context.Context, id string) error {
 		return errors.NewNotFoundError("academic_unit")
 	}
 	if err := s.unitRepo.SoftDelete(ctx, uid); err != nil {
+		s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "delete", ResourceType: "academic_unit", ResourceID: id,
+			ErrorMessage: err.Error(), Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
+		})
 		return errors.NewDatabaseError("delete unit", err)
 	}
 	s.logger.Info("entity deleted", "entity_type", "academic_unit", "entity_id", id)
+	s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "delete", ResourceType: "academic_unit", ResourceID: id,
+		Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
+	})
 	return nil
 }
 

@@ -170,7 +170,7 @@ func main() {
 			users.DELETE("/:user_id", ginmiddleware.RequirePermission(enum.PermissionUsersUpdate), cont.UserHandler.DeleteUser)
 
 			// User sub-resources
-			users.GET("/:user_id/memberships", cont.MembershipHandler.ListMembershipsByUser)
+			users.GET("/:user_id/memberships", ginmiddleware.RequirePermission(enum.PermissionMembershipsRead), cont.MembershipHandler.ListMembershipsByUser)
 
 			// IAM Proxy routes (delegate to iam-platform)
 			users.GET("/:user_id/roles", ginmiddleware.RequirePermission(enum.PermissionUsersRead), iamProxyGetUserRoles(cont))
@@ -181,13 +181,13 @@ func main() {
 		// Stats
 		stats := v1.Group("/stats")
 		{
-			stats.GET("/global", ginmiddleware.RequirePermission(enum.PermissionPermissionsMgmtRead), cont.StatsHandler.GetGlobalStats)
+			stats.GET("/global", ginmiddleware.RequirePermission(enum.PermissionStatsGlobal), cont.StatsHandler.GetGlobalStats)
 		}
 
 		// Materials (admin moderation)
 		materials := v1.Group("/materials")
 		{
-			materials.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionPermissionsMgmtUpdate), cont.MaterialHandler.DeleteMaterial)
+			materials.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionMaterialsDelete), cont.MaterialHandler.DeleteMaterial)
 		}
 
 		// Subjects
@@ -210,11 +210,11 @@ func main() {
 		}
 		guardians := v1.Group("/guardians")
 		{
-			guardians.GET("/:guardian_id/relations", cont.GuardianHandler.GetGuardianRelations)
+			guardians.GET("/:guardian_id/relations", ginmiddleware.RequirePermission(enum.PermissionGuardianRelationsRead), cont.GuardianHandler.GetGuardianRelations)
 		}
 		students := v1.Group("/students")
 		{
-			students.GET("/:student_id/guardians", cont.GuardianHandler.GetStudentGuardians)
+			students.GET("/:student_id/guardians", ginmiddleware.RequirePermission(enum.PermissionGuardianRelationsRead), cont.GuardianHandler.GetStudentGuardians)
 		}
 	}
 

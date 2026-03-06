@@ -7,6 +7,7 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	"github.com/EduGoGroup/edugo-shared/audit"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
 	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
@@ -25,11 +26,12 @@ type SubjectService interface {
 type subjectService struct {
 	subjectRepo repository.SubjectRepository
 	logger      logger.Logger
+	auditLogger audit.AuditLogger
 }
 
 // NewSubjectService creates a new subject service
-func NewSubjectService(subjectRepo repository.SubjectRepository, logger logger.Logger) SubjectService {
-	return &subjectService{subjectRepo: subjectRepo, logger: logger}
+func NewSubjectService(subjectRepo repository.SubjectRepository, logger logger.Logger, auditLogger audit.AuditLogger) SubjectService {
+	return &subjectService{subjectRepo: subjectRepo, logger: logger, auditLogger: auditLogger}
 }
 
 func (s *subjectService) CreateSubject(ctx context.Context, schoolID string, req dto.CreateSubjectRequest) (*dto.SubjectResponse, error) {
@@ -74,10 +76,18 @@ func (s *subjectService) CreateSubject(ctx context.Context, schoolID string, req
 	}
 
 	if err := s.subjectRepo.Create(ctx, subject); err != nil {
+		s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "create", ResourceType: "subject",
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryData,
+		})
 		return nil, errors.NewDatabaseError("create subject", err)
 	}
 
 	s.logger.Info("entity created", "entity_type", "subject", "entity_id", subject.ID.String(), "school_id", schoolID)
+	s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "create", ResourceType: "subject", ResourceID: subject.ID.String(),
+		Severity: audit.SeverityWarning, Category: audit.CategoryData,
+	})
 	response := dto.ToSubjectResponse(subject)
 	return &response, nil
 }
@@ -171,8 +181,16 @@ func (s *subjectService) DeleteSubject(ctx context.Context, id string) error {
 		return errors.NewNotFoundError("subject")
 	}
 	if err := s.subjectRepo.Delete(ctx, sid); err != nil {
+		s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "delete", ResourceType: "subject", ResourceID: id,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryData,
+		})
 		return errors.NewDatabaseError("delete subject", err)
 	}
 	s.logger.Info("entity deleted", "entity_type", "subject", "entity_id", id)
+	s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "delete", ResourceType: "subject", ResourceID: id,
+		Severity: audit.SeverityWarning, Category: audit.CategoryData,
+	})
 	return nil
 }
