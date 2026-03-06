@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 ## [0.1.0] - 2026-02-24
 
 
+## [0.8.0] - 2026-03-06
+
+### Tipo de Release: patch
+
+- update (#16)
+- feat(admin-api): authorization guards + audit logging (#13) (#14)
+- swagger
+- Add Golang Pro skill with concurrency, generics, and testing guides
+
+---
+
 ## [0.7.0] - 2026-03-04
 
 ### Tipo de Release: patch
