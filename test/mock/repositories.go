@@ -417,3 +417,136 @@ func (m *MockUserRepository) List(ctx context.Context, filters sharedrepo.ListFi
 	}
 	return nil, 0, nil
 }
+
+// ---------------------------------------------------------------------------
+// MockConceptTypeRepository
+// ---------------------------------------------------------------------------
+
+type MockConceptTypeRepository struct {
+	FindAllFn    func(ctx context.Context) ([]*entities.ConceptType, error)
+	FindByIDFn   func(ctx context.Context, id uuid.UUID) (*entities.ConceptType, error)
+	FindByCodeFn func(ctx context.Context, code string) (*entities.ConceptType, error)
+	CreateFn     func(ctx context.Context, ct *entities.ConceptType) error
+	UpdateFn     func(ctx context.Context, ct *entities.ConceptType) error
+	SoftDeleteFn func(ctx context.Context, id uuid.UUID) error
+}
+
+func (m *MockConceptTypeRepository) FindAll(ctx context.Context) ([]*entities.ConceptType, error) {
+	if m.FindAllFn != nil {
+		return m.FindAllFn(ctx)
+	}
+	return nil, nil
+}
+
+func (m *MockConceptTypeRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.ConceptType, error) {
+	if m.FindByIDFn != nil {
+		return m.FindByIDFn(ctx, id)
+	}
+	return nil, nil
+}
+
+func (m *MockConceptTypeRepository) FindByCode(ctx context.Context, code string) (*entities.ConceptType, error) {
+	if m.FindByCodeFn != nil {
+		return m.FindByCodeFn(ctx, code)
+	}
+	return nil, nil
+}
+
+func (m *MockConceptTypeRepository) Create(ctx context.Context, ct *entities.ConceptType) error {
+	if m.CreateFn != nil {
+		return m.CreateFn(ctx, ct)
+	}
+	return nil
+}
+
+func (m *MockConceptTypeRepository) Update(ctx context.Context, ct *entities.ConceptType) error {
+	if m.UpdateFn != nil {
+		return m.UpdateFn(ctx, ct)
+	}
+	return nil
+}
+
+func (m *MockConceptTypeRepository) SoftDelete(ctx context.Context, id uuid.UUID) error {
+	if m.SoftDeleteFn != nil {
+		return m.SoftDeleteFn(ctx, id)
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// MockConceptDefinitionRepository
+// ---------------------------------------------------------------------------
+
+type MockConceptDefinitionRepository struct {
+	FindByTypeIDFn func(ctx context.Context, typeID uuid.UUID) ([]*entities.ConceptDefinition, error)
+	CreateFn       func(ctx context.Context, def *entities.ConceptDefinition) error
+	UpdateFn       func(ctx context.Context, def *entities.ConceptDefinition) error
+	DeleteFn       func(ctx context.Context, id uuid.UUID) error
+}
+
+func (m *MockConceptDefinitionRepository) FindByTypeID(ctx context.Context, typeID uuid.UUID) ([]*entities.ConceptDefinition, error) {
+	if m.FindByTypeIDFn != nil {
+		return m.FindByTypeIDFn(ctx, typeID)
+	}
+	return nil, nil
+}
+
+func (m *MockConceptDefinitionRepository) Create(ctx context.Context, def *entities.ConceptDefinition) error {
+	if m.CreateFn != nil {
+		return m.CreateFn(ctx, def)
+	}
+	return nil
+}
+
+func (m *MockConceptDefinitionRepository) Update(ctx context.Context, def *entities.ConceptDefinition) error {
+	if m.UpdateFn != nil {
+		return m.UpdateFn(ctx, def)
+	}
+	return nil
+}
+
+func (m *MockConceptDefinitionRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	if m.DeleteFn != nil {
+		return m.DeleteFn(ctx, id)
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// MockSchoolConceptRepository
+// ---------------------------------------------------------------------------
+
+type MockSchoolConceptRepository struct {
+	FindBySchoolIDFn func(ctx context.Context, schoolID uuid.UUID) ([]*entities.SchoolConcept, error)
+	BulkCreateFn     func(ctx context.Context, concepts []*entities.SchoolConcept) error
+	UpdateFn         func(ctx context.Context, concept *entities.SchoolConcept) error
+	FindByIDFn       func(ctx context.Context, id uuid.UUID) (*entities.SchoolConcept, error)
+}
+
+func (m *MockSchoolConceptRepository) FindBySchoolID(ctx context.Context, schoolID uuid.UUID) ([]*entities.SchoolConcept, error) {
+	if m.FindBySchoolIDFn != nil {
+		return m.FindBySchoolIDFn(ctx, schoolID)
+	}
+	return nil, nil
+}
+
+func (m *MockSchoolConceptRepository) BulkCreate(ctx context.Context, concepts []*entities.SchoolConcept) error {
+	if m.BulkCreateFn != nil {
+		return m.BulkCreateFn(ctx, concepts)
+	}
+	return nil
+}
+
+func (m *MockSchoolConceptRepository) Update(ctx context.Context, concept *entities.SchoolConcept) error {
+	if m.UpdateFn != nil {
+		return m.UpdateFn(ctx, concept)
+	}
+	return nil
+}
+
+func (m *MockSchoolConceptRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.SchoolConcept, error) {
+	if m.FindByIDFn != nil {
+		return m.FindByIDFn(ctx, id)
+	}
+	return nil, nil
+}

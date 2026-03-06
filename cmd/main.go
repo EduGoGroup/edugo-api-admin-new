@@ -132,10 +132,29 @@ func main() {
 			schools.GET("/:id/units/tree", ginmiddleware.RequirePermission(enum.PermissionUnitsRead), cont.AcademicUnitHandler.GetUnitTree)
 			schools.GET("/:id/units/by-type", ginmiddleware.RequirePermission(enum.PermissionUnitsRead), cont.AcademicUnitHandler.ListUnitsByType)
 
+			// School Concepts
+			schools.GET("/:id/concepts", ginmiddleware.RequirePermission(enum.PermissionSchoolsRead), cont.ConceptTypeHandler.GetSchoolConcepts)
+			schools.PUT("/:id/concepts/:conceptId", ginmiddleware.RequirePermission(enum.PermissionSchoolsUpdate), cont.ConceptTypeHandler.UpdateSchoolConcept)
+
 			// School CRUD
 			schools.GET("/:id", ginmiddleware.RequirePermission(enum.PermissionSchoolsRead), cont.SchoolHandler.GetSchool)
 			schools.PUT("/:id", ginmiddleware.RequirePermission(enum.PermissionSchoolsUpdate), cont.SchoolHandler.UpdateSchool)
 			schools.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionSchoolsDelete), cont.SchoolHandler.DeleteSchool)
+		}
+
+		// Concept Types
+		conceptTypes := v1.Group("/concept-types")
+		{
+			conceptTypes.POST("", ginmiddleware.RequirePermission(enum.PermissionConceptTypesCreate), cont.ConceptTypeHandler.CreateConceptType)
+			conceptTypes.GET("", ginmiddleware.RequirePermission(enum.PermissionConceptTypesRead), cont.ConceptTypeHandler.ListConceptTypes)
+			conceptTypes.GET("/:id", ginmiddleware.RequirePermission(enum.PermissionConceptTypesRead), cont.ConceptTypeHandler.GetConceptType)
+			conceptTypes.PUT("/:id", ginmiddleware.RequirePermission(enum.PermissionConceptTypesUpdate), cont.ConceptTypeHandler.UpdateConceptType)
+			conceptTypes.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionConceptTypesDelete), cont.ConceptTypeHandler.DeleteConceptType)
+
+			conceptTypes.POST("/:id/definitions", ginmiddleware.RequirePermission(enum.PermissionConceptTypesUpdate), cont.ConceptTypeHandler.CreateDefinition)
+			conceptTypes.GET("/:id/definitions", ginmiddleware.RequirePermission(enum.PermissionConceptTypesRead), cont.ConceptTypeHandler.ListDefinitions)
+			conceptTypes.PUT("/:id/definitions/:defId", ginmiddleware.RequirePermission(enum.PermissionConceptTypesUpdate), cont.ConceptTypeHandler.UpdateDefinition)
+			conceptTypes.DELETE("/:id/definitions/:defId", ginmiddleware.RequirePermission(enum.PermissionConceptTypesUpdate), cont.ConceptTypeHandler.DeleteDefinition)
 		}
 
 		// Academic Units (standalone)

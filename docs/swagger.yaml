@@ -26,6 +26,46 @@ definitions:
       updated_at:
         type: string
     type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionRequest:
+    properties:
+      category:
+        type: string
+      sort_order:
+        type: integer
+      term_key:
+        type: string
+      term_value:
+        type: string
+    required:
+    - term_key
+    - term_value
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionResponse:
+    properties:
+      category:
+        type: string
+      id:
+        type: string
+      sort_order:
+        type: integer
+      term_key:
+        type: string
+      term_value:
+        type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
   github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateAcademicUnitRequest:
     properties:
       code:
@@ -45,6 +85,20 @@ definitions:
     required:
     - display_name
     - type
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateConceptTypeRequest:
+    properties:
+      code:
+        minLength: 3
+        type: string
+      description:
+        type: string
+      name:
+        minLength: 3
+        type: string
+    required:
+    - code
+    - name
     type: object
   github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateGuardianRelationRequest:
     properties:
@@ -80,6 +134,8 @@ definitions:
         type: string
       code:
         minLength: 3
+        type: string
+      concept_type_id:
         type: string
       contact_email:
         type: string
@@ -216,6 +272,17 @@ definitions:
       total_pages:
         type: integer
     type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolConceptResponse:
+    properties:
+      category:
+        type: string
+      id:
+        type: string
+      term_key:
+        type: string
+      term_value:
+        type: string
+    type: object
   github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse:
     properties:
       address:
@@ -223,6 +290,8 @@ definitions:
       city:
         type: string
       code:
+        type: string
+      concept_type_id:
         type: string
       contact_email:
         type: string
@@ -283,6 +352,13 @@ definitions:
       parent_unit_id:
         type: string
     type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateConceptTypeRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
   github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateGuardianRelationRequest:
     properties:
       is_active:
@@ -294,6 +370,13 @@ definitions:
     properties:
       role:
         type: string
+    type: object
+  github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSchoolConceptRequest:
+    properties:
+      term_value:
+        type: string
+    required:
+    - term_value
     type: object
   github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSchoolRequest:
     properties:
@@ -365,6 +448,354 @@ info:
   title: EduGo API Admin New
   version: "1.0"
 paths:
+  /concept-types:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all concept types
+      tags:
+      - concept-types
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Concept type data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateConceptTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new concept type
+      tags:
+      - concept-types
+  /concept-types/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Concept Type ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a concept type
+      tags:
+      - concept-types
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Concept Type ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a concept type by ID
+      tags:
+      - concept-types
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Concept Type ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Concept type update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateConceptTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a concept type
+      tags:
+      - concept-types
+  /concept-types/{id}/definitions:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Concept Type ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List concept definitions by type
+      tags:
+      - concept-types
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Concept Type ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Definition data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a concept definition
+      tags:
+      - concept-types
+  /concept-types/{id}/definitions/{defId}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Concept Type ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Definition ID (UUID)
+        in: path
+        name: defId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a concept definition
+      tags:
+      - concept-types
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Concept Type ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Definition ID (UUID)
+        in: path
+        name: defId
+        required: true
+        type: string
+      - description: Definition update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a concept definition
+      tags:
+      - concept-types
   /guardian-relations:
     post:
       consumes:
@@ -1054,6 +1485,91 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a school
+      tags:
+      - schools
+  /schools/{id}/concepts:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolConceptResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get school concepts
+      tags:
+      - schools
+  /schools/{id}/concepts/{conceptId}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Concept ID (UUID)
+        in: path
+        name: conceptId
+        required: true
+        type: string
+      - description: School concept update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSchoolConceptRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolConceptResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a school concept
       tags:
       - schools
   /schools/{id}/units:

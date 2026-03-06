@@ -19,6 +19,7 @@ type CreateSchoolRequest struct {
 	SubscriptionTier string                 `json:"subscription_tier"`
 	MaxTeachers      int                    `json:"max_teachers"`
 	MaxStudents      int                    `json:"max_students"`
+	ConceptTypeID    string                 `json:"concept_type_id"`
 	Metadata         map[string]interface{} `json:"metadata"`
 }
 
@@ -49,6 +50,7 @@ type SchoolResponse struct {
 	SubscriptionTier string                 `json:"subscription_tier"`
 	MaxTeachers      int                    `json:"max_teachers"`
 	MaxStudents      int                    `json:"max_students"`
+	ConceptTypeID    string                 `json:"concept_type_id,omitempty"`
 	IsActive         bool                   `json:"is_active"`
 	Metadata         map[string]interface{} `json:"metadata,omitempty"`
 	CreatedAt        time.Time              `json:"created_at"`
@@ -76,6 +78,11 @@ func ToSchoolResponse(school *entities.School) SchoolResponse {
 		_ = json.Unmarshal(school.Metadata, &metadata)
 	}
 
+	var conceptTypeID string
+	if school.ConceptTypeID != nil {
+		conceptTypeID = school.ConceptTypeID.String()
+	}
+
 	return SchoolResponse{
 		ID:               school.ID.String(),
 		Name:             school.Name,
@@ -88,6 +95,7 @@ func ToSchoolResponse(school *entities.School) SchoolResponse {
 		SubscriptionTier: school.SubscriptionTier,
 		MaxTeachers:      school.MaxTeachers,
 		MaxStudents:      school.MaxStudents,
+		ConceptTypeID:    conceptTypeID,
 		IsActive:         school.IsActive,
 		Metadata:         metadata,
 		CreatedAt:        school.CreatedAt,
