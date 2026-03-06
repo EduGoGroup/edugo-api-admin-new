@@ -147,7 +147,7 @@ func TestSchoolService_CreateSchool(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults)
+			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults, mock.NewNoopAuditLogger())
 			result, err := svc.CreateSchool(context.Background(), tt.request)
 
 			if tt.wantErr {
@@ -224,7 +224,7 @@ func TestSchoolService_GetSchool(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults)
+			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults, mock.NewNoopAuditLogger())
 			result, err := svc.GetSchool(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -288,7 +288,7 @@ func TestSchoolService_ListSchools(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults)
+			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults, mock.NewNoopAuditLogger())
 			result, _, err := svc.ListSchools(context.Background(), sharedrepo.ListFilters{})
 
 			if tt.wantErr {
@@ -349,7 +349,7 @@ func TestSchoolService_DeleteSchool(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults)
+			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults, mock.NewNoopAuditLogger())
 			err := svc.DeleteSchool(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -430,7 +430,7 @@ func TestSchoolService_UpdateSchool(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults)
+			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults, mock.NewNoopAuditLogger())
 			result, err := svc.UpdateSchool(context.Background(), tt.id, tt.request)
 
 			if tt.wantErr {
@@ -484,7 +484,7 @@ func TestSchoolService_GetSchoolByCode(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults)
+			svc := service.NewSchoolService(mockRepo, mock.NewMockLogger(), defaultSchoolDefaults, mock.NewNoopAuditLogger())
 			result, err := svc.GetSchoolByCode(context.Background(), tt.code)
 
 			if tt.wantErr {

@@ -79,11 +79,11 @@ func NewContainer(db *gorm.DB, log logger.Logger, cfg *config.Config) *Container
 	c.AuditLogger = auditLogger
 
 	// Services
-	schoolService := service.NewSchoolService(schoolRepo, log, cfg.Defaults.School)
-	unitService := service.NewAcademicUnitService(unitRepo, schoolRepo, log)
+	schoolService := service.NewSchoolService(schoolRepo, log, cfg.Defaults.School, auditLogger)
+	unitService := service.NewAcademicUnitService(unitRepo, schoolRepo, log, auditLogger)
 	membershipService := service.NewMembershipService(membershipRepo, log, auditLogger)
-	subjectService := service.NewSubjectService(subjectRepo, log)
-	guardianService := service.NewGuardianService(guardianRepo, log)
+	subjectService := service.NewSubjectService(subjectRepo, log, auditLogger)
+	guardianService := service.NewGuardianService(guardianRepo, log, auditLogger)
 	userService := service.NewUserService(userRepo, log, auditLogger)
 	statsService := service.NewStatsService(statsRepo, log)
 	materialService := service.NewMaterialService(materialRepo, log)

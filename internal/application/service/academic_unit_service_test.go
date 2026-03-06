@@ -95,7 +95,7 @@ func TestAcademicUnitService_CreateUnit(t *testing.T) {
 				tt.setupMock(unitRepo, schoolRepo)
 			}
 
-			svc := service.NewAcademicUnitService(unitRepo, schoolRepo, mock.NewMockLogger())
+			svc := service.NewAcademicUnitService(unitRepo, schoolRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.CreateUnit(context.Background(), tt.schoolID, tt.request)
 
 			if tt.wantErr {
@@ -158,7 +158,7 @@ func TestAcademicUnitService_GetUnit(t *testing.T) {
 				tt.setupMock(unitRepo)
 			}
 
-			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger())
+			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.GetUnit(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -215,7 +215,7 @@ func TestAcademicUnitService_DeleteUnit(t *testing.T) {
 				tt.setupMock(unitRepo)
 			}
 
-			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger())
+			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			err := svc.DeleteUnit(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -268,7 +268,7 @@ func TestAcademicUnitService_ListUnitsBySchool(t *testing.T) {
 				tt.setupMock(unitRepo)
 			}
 
-			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger())
+			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, _, err := svc.ListUnitsBySchool(context.Background(), tt.schoolID, sharedrepo.ListFilters{})
 
 			if tt.wantErr {
@@ -320,7 +320,7 @@ func TestAcademicUnitService_ListUnitsByType(t *testing.T) {
 				tt.setupMock(unitRepo)
 			}
 
-			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger())
+			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			_, _, err := svc.ListUnitsByType(context.Background(), tt.schoolID, tt.unitType, sharedrepo.ListFilters{})
 
 			if tt.wantErr {
@@ -379,7 +379,7 @@ func TestAcademicUnitService_RestoreUnit(t *testing.T) {
 				tt.setupMock(unitRepo)
 			}
 
-			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger())
+			svc := service.NewAcademicUnitService(unitRepo, &mock.MockSchoolRepository{}, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.RestoreUnit(context.Background(), tt.id)
 
 			if tt.wantErr {

@@ -89,7 +89,7 @@ func TestSubjectService_CreateSubject(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger())
+			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.CreateSubject(context.Background(), tt.schoolID, tt.request)
 
 			if tt.wantErr {
@@ -150,7 +150,7 @@ func TestSubjectService_GetSubject(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger())
+			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.GetSubject(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -212,7 +212,7 @@ func TestSubjectService_ListSubjects(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger())
+			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, _, err := svc.ListSubjects(context.Background(), tt.schoolID, sharedrepo.ListFilters{})
 
 			if tt.wantErr {
@@ -268,7 +268,7 @@ func TestSubjectService_DeleteSubject(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger())
+			svc := service.NewSubjectService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			err := svc.DeleteSubject(context.Background(), tt.id)
 
 			if tt.wantErr {
