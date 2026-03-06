@@ -77,18 +77,26 @@ func (s *guardianService) CreateRelation(ctx context.Context, req dto.CreateGuar
 	}
 
 	if err := s.guardianRepo.Create(ctx, relation); err != nil {
-		s.auditLogger.Log(ctx, audit.AuditEvent{
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
 			Action: "create", ResourceType: "guardian_relation",
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
 			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryData,
-		})
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("create guardian relation", err)
 	}
 
 	s.logger.Info("entity created", "entity_type", "guardian_relation", "entity_id", relation.ID.String())
-	s.auditLogger.Log(ctx, audit.AuditEvent{
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action: "create", ResourceType: "guardian_relation", ResourceID: relation.ID.String(),
-		Severity: audit.SeverityWarning, Category: audit.CategoryData,
-	})
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryData,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	return dto.ToGuardianRelationResponse(relation), nil
 }
 
@@ -142,17 +150,25 @@ func (s *guardianService) DeleteRelation(ctx context.Context, id string) error {
 		return errors.NewValidationError("invalid relation ID")
 	}
 	if err := s.guardianRepo.Delete(ctx, rid); err != nil {
-		s.auditLogger.Log(ctx, audit.AuditEvent{
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
 			Action: "delete", ResourceType: "guardian_relation", ResourceID: id,
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
 			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryData,
-		})
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return errors.NewDatabaseError("delete guardian relation", err)
 	}
 	s.logger.Info("entity deleted", "entity_type", "guardian_relation", "entity_id", id)
-	s.auditLogger.Log(ctx, audit.AuditEvent{
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action: "delete", ResourceType: "guardian_relation", ResourceID: id,
-		Severity: audit.SeverityWarning, Category: audit.CategoryData,
-	})
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryData,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	return nil
 }
 

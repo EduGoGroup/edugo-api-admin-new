@@ -76,18 +76,26 @@ func (s *subjectService) CreateSubject(ctx context.Context, schoolID string, req
 	}
 
 	if err := s.subjectRepo.Create(ctx, subject); err != nil {
-		s.auditLogger.Log(ctx, audit.AuditEvent{
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
 			Action: "create", ResourceType: "subject",
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
 			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryData,
-		})
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("create subject", err)
 	}
 
 	s.logger.Info("entity created", "entity_type", "subject", "entity_id", subject.ID.String(), "school_id", schoolID)
-	s.auditLogger.Log(ctx, audit.AuditEvent{
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action: "create", ResourceType: "subject", ResourceID: subject.ID.String(),
-		Severity: audit.SeverityWarning, Category: audit.CategoryData,
-	})
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryData,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	response := dto.ToSubjectResponse(subject)
 	return &response, nil
 }
@@ -181,16 +189,24 @@ func (s *subjectService) DeleteSubject(ctx context.Context, id string) error {
 		return errors.NewNotFoundError("subject")
 	}
 	if err := s.subjectRepo.Delete(ctx, sid); err != nil {
-		s.auditLogger.Log(ctx, audit.AuditEvent{
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
 			Action: "delete", ResourceType: "subject", ResourceID: id,
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
 			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryData,
-		})
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return errors.NewDatabaseError("delete subject", err)
 	}
 	s.logger.Info("entity deleted", "entity_type", "subject", "entity_id", id)
-	s.auditLogger.Log(ctx, audit.AuditEvent{
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action: "delete", ResourceType: "subject", ResourceID: id,
-		Severity: audit.SeverityWarning, Category: audit.CategoryData,
-	})
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryData,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	return nil
 }

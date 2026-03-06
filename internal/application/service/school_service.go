@@ -130,21 +130,25 @@ func (s *schoolService) CreateSchool(ctx context.Context, req dto.CreateSchoolRe
 
 	if err := s.schoolRepo.Create(ctx, school); err != nil {
 		actorID, actorEmail, actorRole := actorFromContext(ctx)
-		s.auditLogger.Log(ctx, audit.AuditEvent{
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
 			Action: "create", ResourceType: "school",
 			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
-			ErrorMessage: err.Error(), Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
-		})
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("create school", err)
 	}
 
 	s.logger.Info("entity created", "entity_type", "school", "entity_id", school.ID.String(), "name", school.Name)
 	actorID, actorEmail, actorRole := actorFromContext(ctx)
-	s.auditLogger.Log(ctx, audit.AuditEvent{
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action: "create", ResourceType: "school", ResourceID: school.ID.String(),
 		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
-		Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
-	})
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	response := dto.ToSchoolResponse(school)
 	return &response, nil
 }
@@ -227,10 +231,26 @@ func (s *schoolService) UpdateSchool(ctx context.Context, id string, req dto.Upd
 
 	school.UpdatedAt = time.Now()
 	if err := s.schoolRepo.Update(ctx, school); err != nil {
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "update", ResourceType: "school", ResourceID: id,
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("update school", err)
 	}
 
 	s.logger.Info("entity updated", "entity_type", "school", "entity_id", id)
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "update", ResourceType: "school", ResourceID: id,
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	response := dto.ToSchoolResponse(school)
 	return &response, nil
 }
@@ -257,18 +277,22 @@ func (s *schoolService) DeleteSchool(ctx context.Context, id string) error {
 	}
 	actorID, actorEmail, actorRole := actorFromContext(ctx)
 	if err := s.schoolRepo.Delete(ctx, schoolID); err != nil {
-		s.auditLogger.Log(ctx, audit.AuditEvent{
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
 			Action: "delete", ResourceType: "school", ResourceID: id,
 			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
-			ErrorMessage: err.Error(), Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
-		})
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return errors.NewDatabaseError("delete school", err)
 	}
 	s.logger.Info("entity deleted", "entity_type", "school", "entity_id", id)
-	s.auditLogger.Log(ctx, audit.AuditEvent{
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action: "delete", ResourceType: "school", ResourceID: id,
 		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
-		Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
-	})
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	return nil
 }

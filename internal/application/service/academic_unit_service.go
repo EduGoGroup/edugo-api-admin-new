@@ -103,18 +103,26 @@ func (s *academicUnitService) CreateUnit(ctx context.Context, schoolID string, r
 	}
 
 	if err := s.unitRepo.Create(ctx, unit); err != nil {
-		s.auditLogger.Log(ctx, audit.AuditEvent{
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
 			Action: "create", ResourceType: "academic_unit",
-			ErrorMessage: err.Error(), Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
-		})
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("create academic unit", err)
 	}
 
 	s.logger.Info("entity created", "entity_type", "academic_unit", "entity_id", unit.ID.String())
-	s.auditLogger.Log(ctx, audit.AuditEvent{
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action: "create", ResourceType: "academic_unit", ResourceID: unit.ID.String(),
-		Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
-	})
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	response := dto.ToAcademicUnitResponse(unit)
 	return &response, nil
 }
@@ -232,17 +240,25 @@ func (s *academicUnitService) DeleteUnit(ctx context.Context, id string) error {
 		return errors.NewNotFoundError("academic_unit")
 	}
 	if err := s.unitRepo.SoftDelete(ctx, uid); err != nil {
-		s.auditLogger.Log(ctx, audit.AuditEvent{
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
 			Action: "delete", ResourceType: "academic_unit", ResourceID: id,
-			ErrorMessage: err.Error(), Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
-		})
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return errors.NewDatabaseError("delete unit", err)
 	}
 	s.logger.Info("entity deleted", "entity_type", "academic_unit", "entity_id", id)
-	s.auditLogger.Log(ctx, audit.AuditEvent{
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
 		Action: "delete", ResourceType: "academic_unit", ResourceID: id,
-		Severity: audit.SeverityCritical, Category: audit.CategoryAdmin,
-	})
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	return nil
 }
 
