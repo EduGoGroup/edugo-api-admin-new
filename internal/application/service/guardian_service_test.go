@@ -110,7 +110,7 @@ func TestGuardianService_CreateRelation(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger())
+			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.CreateRelation(context.Background(), tt.request, tt.createdBy)
 
 			if tt.wantErr {
@@ -170,7 +170,7 @@ func TestGuardianService_GetRelation(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger())
+			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.GetRelation(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -221,7 +221,7 @@ func TestGuardianService_DeleteRelation(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger())
+			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			err := svc.DeleteRelation(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -271,7 +271,7 @@ func TestGuardianService_GetGuardianRelations(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger())
+			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			result, err := svc.GetGuardianRelations(context.Background(), tt.id)
 
 			if tt.wantErr {
@@ -318,7 +318,7 @@ func TestGuardianService_GetStudentGuardians(t *testing.T) {
 				tt.setupMock(mockRepo)
 			}
 
-			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger())
+			svc := service.NewGuardianService(mockRepo, mock.NewMockLogger(), mock.NewNoopAuditLogger())
 			_, err := svc.GetStudentGuardians(context.Background(), tt.id)
 
 			if tt.wantErr {

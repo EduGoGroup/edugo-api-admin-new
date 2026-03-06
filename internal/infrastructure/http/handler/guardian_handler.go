@@ -42,7 +42,7 @@ func (h *GuardianHandler) CreateGuardianRelation(c *gin.Context) {
 	if createdBy != nil {
 		createdByStr, _ = createdBy.(string)
 	}
-	relation, err := h.guardianService.CreateRelation(c.Request.Context(), req, createdByStr)
+	relation, err := h.guardianService.CreateRelation(withActor(c), req, createdByStr)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -115,7 +115,7 @@ func (h *GuardianHandler) UpdateGuardianRelation(c *gin.Context) {
 // @Router /guardian-relations/{id} [delete]
 func (h *GuardianHandler) DeleteGuardianRelation(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.guardianService.DeleteRelation(c.Request.Context(), id); err != nil {
+	if err := h.guardianService.DeleteRelation(withActor(c), id); err != nil {
 		_ = c.Error(err)
 		return
 	}

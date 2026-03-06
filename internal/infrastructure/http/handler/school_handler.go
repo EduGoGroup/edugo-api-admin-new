@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -9,9 +10,32 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/service"
+	"github.com/EduGoGroup/edugo-api-admin-new/internal/infrastructure/http/middleware"
 	"github.com/EduGoGroup/edugo-shared/logger"
 	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 )
+
+// withActor extracts user_id, email, and role from the Gin context and injects
+// them into the standard context.Context so services can populate audit events.
+func withActor(c *gin.Context) context.Context {
+	ctx := c.Request.Context()
+	if v, exists := c.Get(middleware.ContextKeyUserID); exists {
+		if s, ok := v.(string); ok {
+			ctx = context.WithValue(ctx, service.SchoolActorIDKey, s)
+		}
+	}
+	if v, exists := c.Get(middleware.ContextKeyEmail); exists {
+		if s, ok := v.(string); ok {
+			ctx = context.WithValue(ctx, service.SchoolActorEmailKey, s)
+		}
+	}
+	if v, exists := c.Get(middleware.ContextKeyRole); exists {
+		if s, ok := v.(string); ok {
+			ctx = context.WithValue(ctx, service.SchoolActorRoleKey, s)
+		}
+	}
+	return ctx
+}
 
 // SchoolHandler handles school HTTP endpoints
 type SchoolHandler struct {
@@ -42,7 +66,7 @@ func (h *SchoolHandler) CreateSchool(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	school, err := h.schoolService.CreateSchool(c.Request.Context(), req)
+	school, err := h.schoolService.CreateSchool(withActor(c), req)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -180,7 +204,7 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	school, err := h.schoolService.UpdateSchool(c.Request.Context(), id, req)
+	school, err := h.schoolService.UpdateSchool(withActor(c), id, req)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -207,7 +231,7 @@ func (h *SchoolHandler) DeleteSchool(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "school ID is required", Code: "INVALID_REQUEST"})
 		return
 	}
-	if err := h.schoolService.DeleteSchool(c.Request.Context(), id); err != nil {
+	if err := h.schoolService.DeleteSchool(withActor(c), id); err != nil {
 		_ = c.Error(err)
 		return
 	}

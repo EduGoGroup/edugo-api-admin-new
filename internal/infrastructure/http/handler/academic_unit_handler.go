@@ -45,7 +45,7 @@ func (h *AcademicUnitHandler) CreateUnit(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	unit, err := h.unitService.CreateUnit(c.Request.Context(), schoolID, req)
+	unit, err := h.unitService.CreateUnit(withActor(c), schoolID, req)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -228,7 +228,7 @@ func (h *AcademicUnitHandler) UpdateUnit(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	unit, err := h.unitService.UpdateUnit(c.Request.Context(), id, req)
+	unit, err := h.unitService.UpdateUnit(withActor(c), id, req)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -251,7 +251,7 @@ func (h *AcademicUnitHandler) UpdateUnit(c *gin.Context) {
 // @Router /units/{id} [delete]
 func (h *AcademicUnitHandler) DeleteUnit(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.unitService.DeleteUnit(c.Request.Context(), id); err != nil {
+	if err := h.unitService.DeleteUnit(withActor(c), id); err != nil {
 		_ = c.Error(err)
 		return
 	}

@@ -8,11 +8,37 @@ import (
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
+	"github.com/EduGoGroup/edugo-shared/audit"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
 	"github.com/EduGoGroup/edugo-shared/logger"
 	sharedrepo "github.com/EduGoGroup/edugo-shared/repository"
 	"github.com/google/uuid"
 )
+
+// SchoolActorContextKey is the unexported type used to store audit actor values
+// in context.Context. Defined here so the handler and service use the same type.
+type SchoolActorContextKey string
+
+// Context keys for audit actor data, set by the school handler and read by the service.
+const (
+	SchoolActorIDKey    SchoolActorContextKey = "actor_id"
+	SchoolActorEmailKey SchoolActorContextKey = "actor_email"
+	SchoolActorRoleKey  SchoolActorContextKey = "actor_role"
+)
+
+// actorFromContext extracts the audit actor fields stored by the school handler.
+func actorFromContext(ctx context.Context) (id, email, role string) {
+	if v, ok := ctx.Value(SchoolActorIDKey).(string); ok {
+		id = v
+	}
+	if v, ok := ctx.Value(SchoolActorEmailKey).(string); ok {
+		email = v
+	}
+	if v, ok := ctx.Value(SchoolActorRoleKey).(string); ok {
+		role = v
+	}
+	return id, email, role
+}
 
 // SchoolService defines the school service interface
 type SchoolService interface {
@@ -25,14 +51,15 @@ type SchoolService interface {
 }
 
 type schoolService struct {
-	schoolRepo sharedrepo.SchoolRepository
-	logger     logger.Logger
-	defaults   config.SchoolDefaults
+	schoolRepo  sharedrepo.SchoolRepository
+	logger      logger.Logger
+	defaults    config.SchoolDefaults
+	auditLogger audit.AuditLogger
 }
 
 // NewSchoolService creates a new school service
-func NewSchoolService(schoolRepo sharedrepo.SchoolRepository, logger logger.Logger, defaults config.SchoolDefaults) SchoolService {
-	return &schoolService{schoolRepo: schoolRepo, logger: logger, defaults: defaults}
+func NewSchoolService(schoolRepo sharedrepo.SchoolRepository, logger logger.Logger, defaults config.SchoolDefaults, auditLogger audit.AuditLogger) SchoolService {
+	return &schoolService{schoolRepo: schoolRepo, logger: logger, defaults: defaults, auditLogger: auditLogger}
 }
 
 func (s *schoolService) CreateSchool(ctx context.Context, req dto.CreateSchoolRequest) (*dto.SchoolResponse, error) {
@@ -102,10 +129,26 @@ func (s *schoolService) CreateSchool(ctx context.Context, req dto.CreateSchoolRe
 	}
 
 	if err := s.schoolRepo.Create(ctx, school); err != nil {
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "create", ResourceType: "school",
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("create school", err)
 	}
 
 	s.logger.Info("entity created", "entity_type", "school", "entity_id", school.ID.String(), "name", school.Name)
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "create", ResourceType: "school", ResourceID: school.ID.String(),
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	response := dto.ToSchoolResponse(school)
 	return &response, nil
 }
@@ -188,10 +231,26 @@ func (s *schoolService) UpdateSchool(ctx context.Context, id string, req dto.Upd
 
 	school.UpdatedAt = time.Now()
 	if err := s.schoolRepo.Update(ctx, school); err != nil {
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "update", ResourceType: "school", ResourceID: id,
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("update school", err)
 	}
 
 	s.logger.Info("entity updated", "entity_type", "school", "entity_id", id)
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "update", ResourceType: "school", ResourceID: id,
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	response := dto.ToSchoolResponse(school)
 	return &response, nil
 }
@@ -216,9 +275,24 @@ func (s *schoolService) DeleteSchool(ctx context.Context, id string) error {
 	if school == nil {
 		return errors.NewNotFoundError("school")
 	}
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
 	if err := s.schoolRepo.Delete(ctx, schoolID); err != nil {
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "delete", ResourceType: "school", ResourceID: id,
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return errors.NewDatabaseError("delete school", err)
 	}
 	s.logger.Info("entity deleted", "entity_type", "school", "entity_id", id)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "delete", ResourceType: "school", ResourceID: id,
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	return nil
 }

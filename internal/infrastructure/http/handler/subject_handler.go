@@ -62,7 +62,7 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	subject, err := h.subjectService.CreateSubject(c.Request.Context(), schoolID, req)
+	subject, err := h.subjectService.CreateSubject(withActor(c), schoolID, req)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -169,7 +169,7 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	subject, err := h.subjectService.UpdateSubject(c.Request.Context(), id, req)
+	subject, err := h.subjectService.UpdateSubject(withActor(c), id, req)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -191,7 +191,7 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 // @Router /subjects/{id} [delete]
 func (h *SubjectHandler) DeleteSubject(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.subjectService.DeleteSubject(c.Request.Context(), id); err != nil {
+	if err := h.subjectService.DeleteSubject(withActor(c), id); err != nil {
 		_ = c.Error(err)
 		return
 	}
