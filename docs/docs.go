@@ -15,6 +15,552 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/concept-types": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "concept-types"
+                ],
+                "summary": "List all concept types",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "concept-types"
+                ],
+                "summary": "Create a new concept type",
+                "parameters": [
+                    {
+                        "description": "Concept type data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateConceptTypeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/concept-types/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "concept-types"
+                ],
+                "summary": "Get a concept type by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Concept Type ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "concept-types"
+                ],
+                "summary": "Update a concept type",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Concept Type ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Concept type update data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateConceptTypeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "concept-types"
+                ],
+                "summary": "Delete a concept type",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Concept Type ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/concept-types/{id}/definitions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "concept-types"
+                ],
+                "summary": "List concept definitions by type",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Concept Type ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "concept-types"
+                ],
+                "summary": "Create a concept definition",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Concept Type ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Definition data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/concept-types/{id}/definitions/{defId}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "concept-types"
+                ],
+                "summary": "Update a concept definition",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Concept Type ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Definition ID (UUID)",
+                        "name": "defId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Definition update data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "concept-types"
+                ],
+                "summary": "Delete a concept definition",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Concept Type ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Definition ID (UUID)",
+                        "name": "defId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/guardian-relations": {
             "post": {
                 "security": [
@@ -1132,6 +1678,177 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "No content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/schools/{id}/concepts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "schools"
+                ],
+                "summary": "Get school concepts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "School ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolConceptResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/schools/{id}/concepts/{conceptId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "schools"
+                ],
+                "summary": "Get a single school concept by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "School ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Concept ID (UUID)",
+                        "name": "conceptId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolConceptResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "schools"
+                ],
+                "summary": "Update a school concept",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "School ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Concept ID (UUID)",
+                        "name": "conceptId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "School concept update data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSchoolConceptRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolConceptResponse"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
@@ -2581,6 +3298,67 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionRequest": {
+            "type": "object",
+            "required": [
+                "term_key",
+                "term_value"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "term_key": {
+                    "type": "string"
+                },
+                "term_value": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptDefinitionResponse": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "term_key": {
+                    "type": "string"
+                },
+                "term_value": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.ConceptTypeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateAcademicUnitRequest": {
             "type": "object",
             "required": [
@@ -2607,6 +3385,26 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.CreateConceptTypeRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "name"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 3
                 }
             }
         },
@@ -2664,6 +3462,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "minLength": 3
+                },
+                "concept_type_id": {
+                    "type": "string"
                 },
                 "contact_email": {
                     "type": "string"
@@ -2863,6 +3664,23 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolConceptResponse": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "term_key": {
+                    "type": "string"
+                },
+                "term_value": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolResponse": {
             "type": "object",
             "properties": {
@@ -2873,6 +3691,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "code": {
+                    "type": "string"
+                },
+                "concept_type_id": {
                     "type": "string"
                 },
                 "contact_email": {
@@ -2964,6 +3785,17 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateConceptTypeRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateGuardianRelationRequest": {
             "type": "object",
             "properties": {
@@ -2979,6 +3811,17 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.UpdateSchoolConceptRequest": {
+            "type": "object",
+            "required": [
+                "term_value"
+            ],
+            "properties": {
+                "term_value": {
                     "type": "string"
                 }
             }

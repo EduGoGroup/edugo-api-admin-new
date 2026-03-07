@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
@@ -52,22 +54,20 @@ func main() {
 	}
 
 	// 2. Connect to PostgreSQL via GORM
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s search_path=auth,iam,academic,content,assessment,ui_config,public",
+	// Use pgx SimpleProtocol to disable prepared statement caching at the driver level.
+	// Neon's pooler (PgBouncer transaction mode) does not support prepared statements.
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Database.Postgres.Host, cfg.Database.Postgres.Port, cfg.Database.Postgres.User,
 		cfg.Database.Postgres.Password, cfg.Database.Postgres.Database, cfg.Database.Postgres.SSLMode)
 
-	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: gormLogger.Default.LogMode(gormLogger.Info),
-	})
+	pgxConfig, err := pgx.ParseConfig(dsn)
 	if err != nil {
-		log.Fatalf("Error connecting to PostgreSQL via GORM: %v", err)
+		log.Fatalf("Error parsing PostgreSQL DSN: %v", err)
 	}
+	pgxConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+	pgxConfig.RuntimeParams["search_path"] = "auth,iam,academic,content,assessment,ui_config,public"
 
-	sqlDB, err := gormDB.DB()
-	if err != nil {
-		log.Fatalf("Error getting underlying sql.DB: %v", err)
-	}
-
+	sqlDB := stdlib.OpenDB(*pgxConfig)
 	sqlDB.SetMaxOpenConns(cfg.Database.Postgres.MaxOpenConns)
 	sqlDB.SetMaxIdleConns(cfg.Database.Postgres.MaxIdleConns)
 	sqlDB.SetConnMaxLifetime(time.Hour)
@@ -78,6 +78,14 @@ func main() {
 		log.Fatalf("Error pinging PostgreSQL: %v", err)
 	}
 	log.Println("PostgreSQL connected successfully via GORM")
+
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), &gorm.Config{
+		Logger:      gormLogger.Default.LogMode(gormLogger.Info),
+		PrepareStmt: false,
+	})
+	if err != nil {
+		log.Fatalf("Error connecting to PostgreSQL via GORM: %v", err)
+	}
 
 	// 3. Initialize logger
 	appLogger := newSimpleLogger()
@@ -132,10 +140,30 @@ func main() {
 			schools.GET("/:id/units/tree", ginmiddleware.RequirePermission(enum.PermissionUnitsRead), cont.AcademicUnitHandler.GetUnitTree)
 			schools.GET("/:id/units/by-type", ginmiddleware.RequirePermission(enum.PermissionUnitsRead), cont.AcademicUnitHandler.ListUnitsByType)
 
+			// School Concepts
+			schools.GET("/:id/concepts", ginmiddleware.RequirePermission(enum.PermissionSchoolsRead), cont.ConceptTypeHandler.GetSchoolConcepts)
+			schools.GET("/:id/concepts/:conceptId", ginmiddleware.RequirePermission(enum.PermissionSchoolsRead), cont.ConceptTypeHandler.GetSchoolConcept)
+			schools.PUT("/:id/concepts/:conceptId", ginmiddleware.RequirePermission(enum.PermissionSchoolsUpdate), cont.ConceptTypeHandler.UpdateSchoolConcept)
+
 			// School CRUD
 			schools.GET("/:id", ginmiddleware.RequirePermission(enum.PermissionSchoolsRead), cont.SchoolHandler.GetSchool)
 			schools.PUT("/:id", ginmiddleware.RequirePermission(enum.PermissionSchoolsUpdate), cont.SchoolHandler.UpdateSchool)
 			schools.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionSchoolsDelete), cont.SchoolHandler.DeleteSchool)
+		}
+
+		// Concept Types
+		conceptTypes := v1.Group("/concept-types")
+		{
+			conceptTypes.POST("", ginmiddleware.RequirePermission(enum.PermissionConceptTypesCreate), cont.ConceptTypeHandler.CreateConceptType)
+			conceptTypes.GET("", ginmiddleware.RequirePermission(enum.PermissionConceptTypesRead), cont.ConceptTypeHandler.ListConceptTypes)
+			conceptTypes.GET("/:id", ginmiddleware.RequirePermission(enum.PermissionConceptTypesRead), cont.ConceptTypeHandler.GetConceptType)
+			conceptTypes.PUT("/:id", ginmiddleware.RequirePermission(enum.PermissionConceptTypesUpdate), cont.ConceptTypeHandler.UpdateConceptType)
+			conceptTypes.DELETE("/:id", ginmiddleware.RequirePermission(enum.PermissionConceptTypesDelete), cont.ConceptTypeHandler.DeleteConceptType)
+
+			conceptTypes.POST("/:id/definitions", ginmiddleware.RequirePermission(enum.PermissionConceptTypesUpdate), cont.ConceptTypeHandler.CreateDefinition)
+			conceptTypes.GET("/:id/definitions", ginmiddleware.RequirePermission(enum.PermissionConceptTypesRead), cont.ConceptTypeHandler.ListDefinitions)
+			conceptTypes.PUT("/:id/definitions/:defId", ginmiddleware.RequirePermission(enum.PermissionConceptTypesUpdate), cont.ConceptTypeHandler.UpdateDefinition)
+			conceptTypes.DELETE("/:id/definitions/:defId", ginmiddleware.RequirePermission(enum.PermissionConceptTypesUpdate), cont.ConceptTypeHandler.DeleteDefinition)
 		}
 
 		// Academic Units (standalone)

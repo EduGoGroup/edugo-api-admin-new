@@ -7,6 +7,7 @@ import (
 
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/application/dto"
 	"github.com/EduGoGroup/edugo-api-admin-new/internal/config"
+	"github.com/EduGoGroup/edugo-api-admin-new/internal/domain/repository"
 	"github.com/EduGoGroup/edugo-infrastructure/postgres/entities"
 	"github.com/EduGoGroup/edugo-shared/audit"
 	"github.com/EduGoGroup/edugo-shared/common/errors"
@@ -51,15 +52,34 @@ type SchoolService interface {
 }
 
 type schoolService struct {
-	schoolRepo  sharedrepo.SchoolRepository
-	logger      logger.Logger
-	defaults    config.SchoolDefaults
-	auditLogger audit.AuditLogger
+	schoolRepo        sharedrepo.SchoolRepository
+	conceptTypeRepo   repository.ConceptTypeRepository
+	conceptDefRepo    repository.ConceptDefinitionRepository
+	schoolConceptRepo repository.SchoolConceptRepository
+	logger            logger.Logger
+	defaults          config.SchoolDefaults
+	auditLogger       audit.AuditLogger
 }
 
 // NewSchoolService creates a new school service
-func NewSchoolService(schoolRepo sharedrepo.SchoolRepository, logger logger.Logger, defaults config.SchoolDefaults, auditLogger audit.AuditLogger) SchoolService {
-	return &schoolService{schoolRepo: schoolRepo, logger: logger, defaults: defaults, auditLogger: auditLogger}
+func NewSchoolService(
+	schoolRepo sharedrepo.SchoolRepository,
+	conceptTypeRepo repository.ConceptTypeRepository,
+	conceptDefRepo repository.ConceptDefinitionRepository,
+	schoolConceptRepo repository.SchoolConceptRepository,
+	logger logger.Logger,
+	defaults config.SchoolDefaults,
+	auditLogger audit.AuditLogger,
+) SchoolService {
+	return &schoolService{
+		schoolRepo:        schoolRepo,
+		conceptTypeRepo:   conceptTypeRepo,
+		conceptDefRepo:    conceptDefRepo,
+		schoolConceptRepo: schoolConceptRepo,
+		logger:            logger,
+		defaults:          defaults,
+		auditLogger:       auditLogger,
+	}
 }
 
 func (s *schoolService) CreateSchool(ctx context.Context, req dto.CreateSchoolRequest) (*dto.SchoolResponse, error) {
@@ -110,6 +130,23 @@ func (s *schoolService) CreateSchool(ctx context.Context, req dto.CreateSchoolRe
 		city = &req.City
 	}
 
+	// Validate concept_type_id if provided
+	var conceptTypeID *uuid.UUID
+	if req.ConceptTypeID != "" {
+		ctID, err := uuid.Parse(req.ConceptTypeID)
+		if err != nil {
+			return nil, errors.NewValidationError("invalid concept_type_id")
+		}
+		ct, err := s.conceptTypeRepo.FindByID(ctx, ctID)
+		if err != nil {
+			return nil, errors.NewDatabaseError("find concept type", err)
+		}
+		if ct == nil {
+			return nil, errors.NewNotFoundError("concept_type")
+		}
+		conceptTypeID = &ctID
+	}
+
 	school := &entities.School{
 		ID:               uuid.New(),
 		Name:             req.Name,
@@ -119,6 +156,7 @@ func (s *schoolService) CreateSchool(ctx context.Context, req dto.CreateSchoolRe
 		Country:          country,
 		Phone:            phone,
 		Email:            email,
+		ConceptTypeID:    conceptTypeID,
 		Metadata:         metadataJSON,
 		IsActive:         true,
 		SubscriptionTier: subscriptionTier,
@@ -138,6 +176,34 @@ func (s *schoolService) CreateSchool(ctx context.Context, req dto.CreateSchoolRe
 			s.logger.Error("failed to write audit log", "error", logErr)
 		}
 		return nil, errors.NewDatabaseError("create school", err)
+	}
+
+	// Copy concept definitions to school_concepts if concept_type_id was provided
+	if conceptTypeID != nil {
+		defs, err := s.conceptDefRepo.FindByTypeID(ctx, *conceptTypeID)
+		if err != nil {
+			s.logger.Error("failed to load concept definitions for school", "error", err, "school_id", school.ID.String())
+			return nil, errors.NewDatabaseError("load concept definitions", err)
+		}
+		if len(defs) > 0 {
+			concepts := make([]*entities.SchoolConcept, len(defs))
+			for i, def := range defs {
+				concepts[i] = &entities.SchoolConcept{
+					ID:        uuid.New(),
+					SchoolID:  school.ID,
+					TermKey:   def.TermKey,
+					TermValue: def.TermValue,
+					Category:  def.Category,
+					CreatedAt: now,
+					UpdatedAt: now,
+				}
+			}
+			if err := s.schoolConceptRepo.BulkCreate(ctx, concepts); err != nil {
+				s.logger.Error("failed to copy concept definitions to school", "error", err, "school_id", school.ID.String())
+				return nil, errors.NewDatabaseError("copy concept definitions to school", err)
+			}
+			s.logger.Info("concept definitions copied to school", "school_id", school.ID.String(), "count", len(concepts))
+		}
 	}
 
 	s.logger.Info("entity created", "entity_type", "school", "entity_id", school.ID.String(), "name", school.Name)
