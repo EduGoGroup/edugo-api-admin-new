@@ -34,6 +34,7 @@ type Container struct {
 	UserHandler         *handler.UserHandler
 	StatsHandler        *handler.StatsHandler
 	MaterialHandler     *handler.MaterialHandler
+	ConceptTypeHandler  *handler.ConceptTypeHandler
 	HealthHandler       *handler.HealthHandler
 }
 
@@ -73,13 +74,16 @@ func NewContainer(db *gorm.DB, log logger.Logger, cfg *config.Config) *Container
 	guardianRepo := pgRepo.NewPostgresGuardianRepository(db)
 	statsRepo := pgRepo.NewPostgresStatsRepository(db)
 	materialRepo := pgRepo.NewPostgresMaterialRepository(db)
+	conceptTypeRepo := pgRepo.NewPostgresConceptTypeRepository(db)
+	conceptDefRepo := pgRepo.NewPostgresConceptDefinitionRepository(db)
+	schoolConceptRepo := pgRepo.NewPostgresSchoolConceptRepository(db)
 
 	// Audit logger
 	auditLogger := auditpostgres.NewPostgresAuditLogger(db, "admin-api")
 	c.AuditLogger = auditLogger
 
 	// Services
-	schoolService := service.NewSchoolService(schoolRepo, log, cfg.Defaults.School, auditLogger)
+	schoolService := service.NewSchoolService(schoolRepo, conceptTypeRepo, conceptDefRepo, schoolConceptRepo, log, cfg.Defaults.School, auditLogger)
 	unitService := service.NewAcademicUnitService(unitRepo, schoolRepo, log, auditLogger)
 	membershipService := service.NewMembershipService(membershipRepo, log, auditLogger)
 	subjectService := service.NewSubjectService(subjectRepo, log, auditLogger)
@@ -87,6 +91,7 @@ func NewContainer(db *gorm.DB, log logger.Logger, cfg *config.Config) *Container
 	userService := service.NewUserService(userRepo, log, auditLogger)
 	statsService := service.NewStatsService(statsRepo, log)
 	materialService := service.NewMaterialService(materialRepo, log)
+	conceptTypeService := service.NewConceptTypeService(conceptTypeRepo, conceptDefRepo, schoolConceptRepo, log, auditLogger)
 
 	// Handlers
 	c.SchoolHandler = handler.NewSchoolHandler(schoolService, log)
@@ -97,6 +102,7 @@ func NewContainer(db *gorm.DB, log logger.Logger, cfg *config.Config) *Container
 	c.UserHandler = handler.NewUserHandler(userService, log)
 	c.StatsHandler = handler.NewStatsHandler(statsService, log)
 	c.MaterialHandler = handler.NewMaterialHandler(materialService, log)
+	c.ConceptTypeHandler = handler.NewConceptTypeHandler(conceptTypeService, log)
 	c.HealthHandler = handler.NewHealthHandler(db, "dev")
 
 	return c
