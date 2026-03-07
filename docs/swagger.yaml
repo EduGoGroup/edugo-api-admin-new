@@ -1524,6 +1524,30 @@ paths:
       tags:
       - schools
   /schools/{id}/concepts/{conceptId}:
+    get:
+      parameters:
+      - description: School ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Concept ID (UUID)
+        in: path
+        name: conceptId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolConceptResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a single school concept by ID
+      tags:
+      - schools
     put:
       consumes:
       - application/json

@@ -1764,6 +1764,44 @@ const docTemplate = `{
             }
         },
         "/schools/{id}/concepts/{conceptId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "schools"
+                ],
+                "summary": "Get a single school concept by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "School ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Concept ID (UUID)",
+                        "name": "conceptId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_EduGoGroup_edugo-api-admin-new_internal_application_dto.SchoolConceptResponse"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
