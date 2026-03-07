@@ -19,6 +19,7 @@ type ConceptTypeRepository interface {
 
 // ConceptDefinitionRepository defines persistence operations for ConceptDefinition
 type ConceptDefinitionRepository interface {
+	FindByID(ctx context.Context, id uuid.UUID) (*entities.ConceptDefinition, error)
 	FindByTypeID(ctx context.Context, typeID uuid.UUID) ([]*entities.ConceptDefinition, error)
 	Create(ctx context.Context, def *entities.ConceptDefinition) error
 	Update(ctx context.Context, def *entities.ConceptDefinition) error

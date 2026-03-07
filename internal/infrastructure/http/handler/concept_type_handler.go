@@ -310,6 +310,34 @@ func (h *ConceptTypeHandler) GetSchoolConcepts(c *gin.Context) {
 	c.JSON(http.StatusOK, concepts)
 }
 
+// GetSchoolConcept godoc
+// @Summary Get a single school concept by ID
+// @Tags schools
+// @Produce json
+// @Param id path string true "School ID (UUID)"
+// @Param conceptId path string true "Concept ID (UUID)"
+// @Success 200 {object} dto.SchoolConceptResponse
+// @Security BearerAuth
+// @Router /schools/{id}/concepts/{conceptId} [get]
+func (h *ConceptTypeHandler) GetSchoolConcept(c *gin.Context) {
+	schoolID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid school ID", Code: "INVALID_REQUEST"})
+		return
+	}
+	conceptID, err := uuid.Parse(c.Param("conceptId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid concept ID", Code: "INVALID_REQUEST"})
+		return
+	}
+	concept, err := h.conceptTypeService.GetSchoolConcept(c.Request.Context(), schoolID, conceptID)
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, concept)
+}
+
 // UpdateSchoolConcept godoc
 // @Summary Update a school concept
 // @Tags schools

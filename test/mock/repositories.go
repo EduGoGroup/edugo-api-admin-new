@@ -478,10 +478,18 @@ func (m *MockConceptTypeRepository) SoftDelete(ctx context.Context, id uuid.UUID
 // ---------------------------------------------------------------------------
 
 type MockConceptDefinitionRepository struct {
+	FindByIDFn     func(ctx context.Context, id uuid.UUID) (*entities.ConceptDefinition, error)
 	FindByTypeIDFn func(ctx context.Context, typeID uuid.UUID) ([]*entities.ConceptDefinition, error)
 	CreateFn       func(ctx context.Context, def *entities.ConceptDefinition) error
 	UpdateFn       func(ctx context.Context, def *entities.ConceptDefinition) error
 	DeleteFn       func(ctx context.Context, id uuid.UUID) error
+}
+
+func (m *MockConceptDefinitionRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.ConceptDefinition, error) {
+	if m.FindByIDFn != nil {
+		return m.FindByIDFn(ctx, id)
+	}
+	return nil, nil
 }
 
 func (m *MockConceptDefinitionRepository) FindByTypeID(ctx context.Context, typeID uuid.UUID) ([]*entities.ConceptDefinition, error) {

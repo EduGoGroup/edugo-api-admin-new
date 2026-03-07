@@ -68,6 +68,17 @@ func NewPostgresConceptDefinitionRepository(db *gorm.DB) repository.ConceptDefin
 	return &postgresConceptDefinitionRepository{db: db}
 }
 
+func (r *postgresConceptDefinitionRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.ConceptDefinition, error) {
+	var def entities.ConceptDefinition
+	if err := r.db.WithContext(ctx).First(&def, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &def, nil
+}
+
 func (r *postgresConceptDefinitionRepository) FindByTypeID(ctx context.Context, typeID uuid.UUID) ([]*entities.ConceptDefinition, error) {
 	var defs []*entities.ConceptDefinition
 	err := r.db.WithContext(ctx).Where("concept_type_id = ?", typeID).Order("sort_order, term_key").Find(&defs).Error

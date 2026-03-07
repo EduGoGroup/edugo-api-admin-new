@@ -29,6 +29,7 @@ type ConceptTypeService interface {
 
 	// School concepts (read + personalize)
 	GetSchoolConcepts(ctx context.Context, schoolID uuid.UUID) ([]dto.SchoolConceptResponse, error)
+	GetSchoolConcept(ctx context.Context, schoolID uuid.UUID, conceptID uuid.UUID) (*dto.SchoolConceptResponse, error)
 	UpdateSchoolConcept(ctx context.Context, schoolID uuid.UUID, conceptID uuid.UUID, req *dto.UpdateSchoolConceptRequest) (*dto.SchoolConceptResponse, error)
 }
 
@@ -239,10 +240,26 @@ func (s *conceptTypeService) CreateDefinition(ctx context.Context, typeID uuid.U
 	}
 
 	if err := s.conceptDefRepo.Create(ctx, def); err != nil {
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "create", ResourceType: "concept_definition",
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("create concept definition", err)
 	}
 
 	s.logger.Info("entity created", "entity_type", "concept_definition", "entity_id", def.ID.String())
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "create", ResourceType: "concept_definition", ResourceID: def.ID.String(),
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	response := dto.ToConceptDefinitionResponse(def)
 	return &response, nil
 }
@@ -272,20 +289,12 @@ func (s *conceptTypeService) UpdateDefinition(ctx context.Context, typeID uuid.U
 		return nil, errors.NewNotFoundError("concept_type")
 	}
 
-	// Find existing definitions to locate the one to update
-	defs, err := s.conceptDefRepo.FindByTypeID(ctx, typeID)
+	// Fetch the target definition directly and verify it belongs to the given concept type
+	target, err := s.conceptDefRepo.FindByID(ctx, defID)
 	if err != nil {
-		return nil, errors.NewDatabaseError("find concept definitions", err)
+		return nil, errors.NewDatabaseError("find concept definition", err)
 	}
-
-	var target *entities.ConceptDefinition
-	for _, d := range defs {
-		if d.ID == defID {
-			target = d
-			break
-		}
-	}
-	if target == nil {
+	if target == nil || target.ConceptTypeID != typeID {
 		return nil, errors.NewNotFoundError("concept_definition")
 	}
 
@@ -298,10 +307,26 @@ func (s *conceptTypeService) UpdateDefinition(ctx context.Context, typeID uuid.U
 	target.UpdatedAt = time.Now()
 
 	if err := s.conceptDefRepo.Update(ctx, target); err != nil {
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "update", ResourceType: "concept_definition", ResourceID: defID.String(),
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("update concept definition", err)
 	}
 
 	s.logger.Info("entity updated", "entity_type", "concept_definition", "entity_id", defID.String())
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "update", ResourceType: "concept_definition", ResourceID: defID.String(),
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	response := dto.ToConceptDefinitionResponse(target)
 	return &response, nil
 }
@@ -315,28 +340,35 @@ func (s *conceptTypeService) DeleteDefinition(ctx context.Context, typeID uuid.U
 		return errors.NewNotFoundError("concept_type")
 	}
 
-	// Verify the definition belongs to this type
-	defs, err := s.conceptDefRepo.FindByTypeID(ctx, typeID)
+	// Fetch the target definition directly and verify it belongs to the given concept type
+	target, err := s.conceptDefRepo.FindByID(ctx, defID)
 	if err != nil {
-		return errors.NewDatabaseError("find concept definitions", err)
+		return errors.NewDatabaseError("find concept definition", err)
 	}
-
-	found := false
-	for _, d := range defs {
-		if d.ID == defID {
-			found = true
-			break
-		}
-	}
-	if !found {
+	if target == nil || target.ConceptTypeID != typeID {
 		return errors.NewNotFoundError("concept_definition")
 	}
 
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
 	if err := s.conceptDefRepo.Delete(ctx, defID); err != nil {
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "delete", ResourceType: "concept_definition", ResourceID: defID.String(),
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return errors.NewDatabaseError("delete concept definition", err)
 	}
 
 	s.logger.Info("entity deleted", "entity_type", "concept_definition", "entity_id", defID.String())
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "delete", ResourceType: "concept_definition", ResourceID: defID.String(),
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	return nil
 }
 
@@ -348,6 +380,18 @@ func (s *conceptTypeService) GetSchoolConcepts(ctx context.Context, schoolID uui
 		return nil, errors.NewDatabaseError("list school concepts", err)
 	}
 	return dto.ToSchoolConceptResponseList(concepts), nil
+}
+
+func (s *conceptTypeService) GetSchoolConcept(ctx context.Context, schoolID uuid.UUID, conceptID uuid.UUID) (*dto.SchoolConceptResponse, error) {
+	concept, err := s.schoolConceptRepo.FindByID(ctx, conceptID)
+	if err != nil {
+		return nil, errors.NewDatabaseError("find school concept", err)
+	}
+	if concept == nil || concept.SchoolID != schoolID {
+		return nil, errors.NewNotFoundError("school_concept")
+	}
+	response := dto.ToSchoolConceptResponse(concept)
+	return &response, nil
 }
 
 func (s *conceptTypeService) UpdateSchoolConcept(ctx context.Context, schoolID uuid.UUID, conceptID uuid.UUID, req *dto.UpdateSchoolConceptRequest) (*dto.SchoolConceptResponse, error) {
@@ -366,10 +410,26 @@ func (s *conceptTypeService) UpdateSchoolConcept(ctx context.Context, schoolID u
 	concept.UpdatedAt = time.Now()
 
 	if err := s.schoolConceptRepo.Update(ctx, concept); err != nil {
+		actorID, actorEmail, actorRole := actorFromContext(ctx)
+		if logErr := s.auditLogger.Log(ctx, audit.AuditEvent{
+			Action: "update", ResourceType: "school_concept", ResourceID: conceptID.String(),
+			ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+			ErrorMessage: err.Error(), Severity: audit.SeverityWarning, Category: audit.CategoryAdmin,
+		}); logErr != nil {
+			s.logger.Error("failed to write audit log", "error", logErr)
+		}
 		return nil, errors.NewDatabaseError("update school concept", err)
 	}
 
 	s.logger.Info("entity updated", "entity_type", "school_concept", "entity_id", conceptID.String())
+	actorID, actorEmail, actorRole := actorFromContext(ctx)
+	if err := s.auditLogger.Log(ctx, audit.AuditEvent{
+		Action: "update", ResourceType: "school_concept", ResourceID: conceptID.String(),
+		ActorID: actorID, ActorEmail: actorEmail, ActorRole: actorRole,
+		Severity: audit.SeverityInfo, Category: audit.CategoryAdmin,
+	}); err != nil {
+		s.logger.Error("failed to write audit log", "error", err)
+	}
 	response := dto.ToSchoolConceptResponse(concept)
 	return &response, nil
 }

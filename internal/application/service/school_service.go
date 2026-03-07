@@ -183,7 +183,9 @@ func (s *schoolService) CreateSchool(ctx context.Context, req dto.CreateSchoolRe
 		defs, err := s.conceptDefRepo.FindByTypeID(ctx, *conceptTypeID)
 		if err != nil {
 			s.logger.Error("failed to load concept definitions for school", "error", err, "school_id", school.ID.String())
-		} else if len(defs) > 0 {
+			return nil, errors.NewDatabaseError("load concept definitions", err)
+		}
+		if len(defs) > 0 {
 			concepts := make([]*entities.SchoolConcept, len(defs))
 			for i, def := range defs {
 				concepts[i] = &entities.SchoolConcept{
@@ -198,9 +200,9 @@ func (s *schoolService) CreateSchool(ctx context.Context, req dto.CreateSchoolRe
 			}
 			if err := s.schoolConceptRepo.BulkCreate(ctx, concepts); err != nil {
 				s.logger.Error("failed to copy concept definitions to school", "error", err, "school_id", school.ID.String())
-			} else {
-				s.logger.Info("concept definitions copied to school", "school_id", school.ID.String(), "count", len(concepts))
+				return nil, errors.NewDatabaseError("copy concept definitions to school", err)
 			}
+			s.logger.Info("concept definitions copied to school", "school_id", school.ID.String(), "count", len(concepts))
 		}
 	}
 
